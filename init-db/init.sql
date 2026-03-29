@@ -1,0 +1,5 @@
+CREATE DATABASE user_db;
+CREATE DATABASE map_db;
+CREATE DATABASE pet_db;
+CREATE DATABASE notice_db;
+CREATE DATABASE notification_db;
