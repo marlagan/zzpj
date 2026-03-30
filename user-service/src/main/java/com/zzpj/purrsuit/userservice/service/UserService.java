@@ -12,6 +12,7 @@ import com.zzpj.purrsuit.userservice.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @AllArgsConstructor
@@ -21,6 +22,7 @@ public class UserService {
     private UserRepository userRepository;
     private RoleRepository roleRepository;
     private final MessageSource messageSource;
+    private final PasswordEncoder passwordEncoder;
 
     public void registerUser(UserRegistrationDTO userRegistrationDTO){
 
@@ -29,6 +31,7 @@ public class UserService {
         String firstName = userRegistrationDTO.getFirstName();
         String lastName = userRegistrationDTO.getLastName();
         String password = userRegistrationDTO.getPassword();
+        String encodedPassword = passwordEncoder.encode(password);
 
         if(userRepository.findByEmail(email).size() != 0){
             throw new EmailAlreadyRegisteredException(messageSource.getMessage(
@@ -45,7 +48,7 @@ public class UserService {
         user.setPhoneNumber(phoneNumber);
         user.setFirstName(firstName);
         user.setLastName(lastName);
-        user.setPassword(password);
+        user.setPassword(encodedPassword);
 
         userRepository.save(user);
 
@@ -61,8 +64,8 @@ public class UserService {
             throw new EmailDoesNotExistException(messageSource.getMessage(
                     "error.email.does.not.exist", new Object[]{email}, LocaleContextHolder.getLocale()));
         }
-        //temporary
-        if(!user.getPassword().equals(password)){
+
+        if(passwordEncoder.matches(password, user.getPassword())){
             throw new IncorrectPasswordException(messageSource.getMessage(
                     "error.email.does.not.exist",  new Object[]{}, LocaleContextHolder.getLocale()));
         }
