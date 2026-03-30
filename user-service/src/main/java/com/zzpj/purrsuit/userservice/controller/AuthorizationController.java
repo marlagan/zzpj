@@ -23,13 +23,15 @@ public class AuthorizationController {
 
     @PostMapping("/login")
     public ResponseEntity<String> login(@Valid @RequestBody UserLoginDTO userLoginDTO){
+        String token = "";
         try {
-            userService.loginUser(userLoginDTO);
+            token = userService.loginUser(userLoginDTO);
         }catch (IncorrectPasswordException | EmailDoesNotExistException e){
             log.error("Login error: ", e.getMessage());
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
         }
-        return ResponseEntity.ok("Login was successful");
+
+        return ResponseEntity.ok(token);
     }
 
     @PostMapping("/register")

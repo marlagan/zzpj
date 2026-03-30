@@ -8,7 +8,6 @@ import com.zzpj.purrsuit.userservice.exceptions.EmailAlreadyRegisteredException;
 import com.zzpj.purrsuit.userservice.exceptions.EmailDoesNotExistException;
 import com.zzpj.purrsuit.userservice.exceptions.IncorrectPasswordException;
 import com.zzpj.purrsuit.userservice.exceptions.PhoneNumberAlreadyRegisteredException;
-import com.zzpj.purrsuit.userservice.repository.RoleRepository;
 import com.zzpj.purrsuit.userservice.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -23,6 +22,7 @@ public class UserService {
     private UserRepository userRepository;
     private final MessageSource messageSource;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     public void registerUser(UserRegistrationDTO userRegistrationDTO){
 
@@ -55,7 +55,7 @@ public class UserService {
 
     }
 
-    public void loginUser(UserLoginDTO userLoginDTO){
+    public String loginUser(UserLoginDTO userLoginDTO){
 
         String email = userLoginDTO.getEmail();
         String password = userLoginDTO.getPassword();
@@ -68,8 +68,10 @@ public class UserService {
 
         if(passwordEncoder.matches(password, user.getPassword())){
             throw new IncorrectPasswordException(messageSource.getMessage(
-                    "error.email.does.not.exist",  new Object[]{}, LocaleContextHolder.getLocale()));
+                    "error.password.incorrect",  new Object[]{}, LocaleContextHolder.getLocale()));
         }
+
+        return jwtService.generateToken(user);
 
     }
 }
