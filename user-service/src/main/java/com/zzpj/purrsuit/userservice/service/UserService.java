@@ -3,6 +3,7 @@ package com.zzpj.purrsuit.userservice.service;
 import com.zzpj.purrsuit.userservice.dto.UserLoginDTO;
 import com.zzpj.purrsuit.userservice.dto.UserRegistrationDTO;
 import com.zzpj.purrsuit.userservice.entity.User;
+import com.zzpj.purrsuit.userservice.enums.RoleName;
 import com.zzpj.purrsuit.userservice.exceptions.EmailAlreadyRegisteredException;
 import com.zzpj.purrsuit.userservice.exceptions.EmailDoesNotExistException;
 import com.zzpj.purrsuit.userservice.exceptions.IncorrectPasswordException;
@@ -20,7 +21,6 @@ import org.springframework.stereotype.Service;
 public class UserService {
 
     private UserRepository userRepository;
-    private RoleRepository roleRepository;
     private final MessageSource messageSource;
     private final PasswordEncoder passwordEncoder;
 
@@ -49,6 +49,7 @@ public class UserService {
         user.setFirstName(firstName);
         user.setLastName(lastName);
         user.setPassword(encodedPassword);
+        user.setRoleName(RoleName.USER);
 
         userRepository.save(user);
 

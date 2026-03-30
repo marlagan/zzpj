@@ -1,5 +1,6 @@
 package com.zzpj.purrsuit.userservice.entity;
 
+import com.zzpj.purrsuit.userservice.enums.RoleName;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
@@ -30,10 +31,7 @@ public class User {
     @Size(message = "min 8 characters")
     //regex later
     private String password;
-
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id"))
-    private Set<Role> roles = new HashSet<>();
+    @Enumerated(EnumType.STRING)
+    private RoleName roleName;
 
 }
