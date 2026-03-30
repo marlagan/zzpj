@@ -21,12 +21,12 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String first_name;
-    private String last_name;
+    private String firstName;
+    private String lastName;
     @Email(message = "Bad email")
     private String email;
     //I have to add pattern and regex later
-    private String phone_number;
+    private String phoneNumber;
     @Size(message = "min 8 characters")
     //regex later
     private String password;
