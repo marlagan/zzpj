@@ -1,5 +1,13 @@
+debug: true
 spring:
   application:
     name: user-service
   config:
     import: "configserver:http://localhost:8888"
+
+
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.config: DEBUG
+    org.springframework.web.client: DEBUG

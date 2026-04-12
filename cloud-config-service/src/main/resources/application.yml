@@ -10,4 +10,5 @@ spring:
     config:
       server:
         native:
-          search-locations: file:./config-repo
+          ##aboslute path to config-repo directory
+          search-locations: file:///D:/zzpj/zzpj1/zzpj/config-repo/

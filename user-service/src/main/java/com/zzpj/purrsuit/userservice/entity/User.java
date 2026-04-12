@@ -9,9 +9,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.HashSet;
-import java.util.Set;
-
 @Entity
 @Data
 @AllArgsConstructor
@@ -26,10 +23,9 @@ public class User {
     private String lastName;
     @Email(message = "Bad email")
     private String email;
-    //I have to add pattern and regex later
+    @Pattern(regexp = "^\\+?[1-9]\\d{7,14}$", message = "Invalid phone number format")
     private String phoneNumber;
     @Size(message = "min 8 characters")
-    //regex later
     private String password;
     @Enumerated(EnumType.STRING)
     private RoleName roleName;

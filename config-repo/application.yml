@@ -20,6 +20,5 @@ springdoc:
     path: /v3/api-docs
 
 jwt:
-  #temp solution, later env variable
-  secret: Qpxw96ibmPfPyQRBLc7Jziz8Q6iF2eh2
-  expiration: 86400000
+  secret: "vQ2m9sP8xLk4ZrT1aW7nC6bYpD3fH8jK0sV5uR9xM2eQ="
+  expiration: 3600000

@@ -30,29 +30,11 @@ public class JwtService {
     }
 
     public String generateToken(User user){
-        return Jwts.builder().setSubject(user.getEmail()).claim("role", user.getRoleName()).setIssuedAt(new Date()).
+        return Jwts.builder().setSubject(user.getEmail())
+                .claim("user_id", user.getId())
+                .claim("role", user.getRoleName()).setIssuedAt(new Date()).
                 setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(generateSignInKey(), SignatureAlgorithm.HS256).compact();
-    }
-
-    public boolean isTokenValid(String token, User user){
-        return user.getEmail().equals(getEmailFromToken(token)) && isExpired(token);
-    }
-
-    private boolean isExpired(String token){
-        if(getExpirationDateFromToken(token).getExpiration().before(new Date())){
-            return true;
-        }else {
-            return false;
-        }
-    }
-
-    public String getEmailFromToken(String token){
-        return Jwts.parser().setSigningKey(getSecretKey()).build().parseClaimsJws(token).getBody().getSubject();
-    }
-
-    private Claims getExpirationDateFromToken(String token){
-        return Jwts.parser().setSigningKey(getSecretKey()).build().parseClaimsJws(token).getBody();
     }
 
 }

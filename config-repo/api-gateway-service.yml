@@ -2,41 +2,26 @@ server:
   port: 8087
 
 spring:
+  application:
+    name: api-gateway-service
+
   cloud:
     gateway:
       routes:
-
         - id: user-auth-route
           uri: lb://user-service
           predicates:
-            - Path=/api/users/login, /api/users/register
+            - Path=/api/users/login,/api/users/register
 
         - id: user-service-route
           uri: lb://user-service
           predicates:
             - Path=/api/users/**
-          filters:
-            - name: JwtAuthenticationFilter
-
-        - id: pet-service-route
-          uri: lb://pet-service
-          predicates:
-            - Path=/api/pets/**
-          filters:
-            - name: JwtAuthenticationFilter
-
-        - id: map-service-route
-          uri: lb://map-service
-          predicates:
-            - Path=/api/map/**
-          filters:
-            - name: JwtAuthenticationFilter
-
 eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
 
 jwt:
-  secret: ""
+  secret: vQ2m9sP8xLk4ZrT1aW7nC6bYpD3fH8jK0sV5uR9xM2eQ=
   expiration: 3600000
