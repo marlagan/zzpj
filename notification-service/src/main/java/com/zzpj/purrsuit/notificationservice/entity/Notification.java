@@ -57,9 +57,4 @@ public class Notification {
             this.status = NotificationStatus.PENDING;
         }
     }
-
-
-
-
-
 }
