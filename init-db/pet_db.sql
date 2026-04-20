@@ -1,6 +1,6 @@
-CREATE SCHEMA IF NOT EXISTS pet_db;
+\connect pet_db
 
-CREATE TABLE IF NOT EXISTS pet_db.match_results (
+CREATE TABLE IF NOT EXISTS match_results (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     lost_notice_id UUID NOT NULL,
     seen_notice_id UUID NOT NULL,
@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS pet_db.match_results (
     created_at TIMESTAMP NOT NULL DEFAULT now()
     );
 
-CREATE TABLE IF NOT EXISTS pet_db.notice_embeddings (
+CREATE TABLE IF NOT EXISTS notice_embeddings (
     notice_id UUID PRIMARY KEY,
     embedding DOUBLE PRECISION[] NOT NULL
 );
