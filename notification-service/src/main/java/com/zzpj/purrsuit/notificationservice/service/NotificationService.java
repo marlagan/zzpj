@@ -15,15 +15,15 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class NotificationService {
 
-    private NotificationRepository notificationRepository;
+    private final NotificationRepository notificationRepository;
 
-    /*public List<NotificationDTO> getUserNotifications(UUID userId) {
+    public List<NotificationDTO> getUserNotifications(UUID userId) {
         return notificationRepository
                 .findByUSerIdOrderByCreatedAtDesc(userId)
                 .stream()
-                //.map(this::toDTO)
-                //.collect(Collectors.toList());
-    }*/
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
 
     public long countUnread(UUID userId) {
         return notificationRepository.countByUserId(userId);
@@ -33,5 +33,15 @@ public class NotificationService {
         return notificationRepository.save(notification);
     }
 
-// todo toDTO
+    private NotificationDTO toDTO(Notification notification) {
+        return NotificationDTO.builder()
+                .id(notification.getId())
+                .userId(notification.getUserId())
+                .message(notification.getMessage())
+                .type(notification.getType())
+                .channel(notification.getChannel())
+                .createdAt(notification.getCreatedAt())
+                .build();
+    }
+
 }
