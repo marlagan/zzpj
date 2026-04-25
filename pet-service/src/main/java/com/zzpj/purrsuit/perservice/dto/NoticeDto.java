@@ -5,7 +5,7 @@ import java.util.UUID;
 public record NoticeDto(
         UUID id,
         String species,
-        String aiDecsription,
+        String description,
         double latitude,
         double longitude,
         String type // lost or seen

@@ -18,11 +18,8 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
-#  llm:
-#    api:
-#      url: https://api.openai.com/v1
-#      key: ${LLM_API_KEY}
-#
-#  matching:
-#    similarity:
-#      threshold: 0.75
+  llm:
+    api:
+      url: https://api.groq.com/openai/v1
+      key: ${GROQ_API_KEY}
+      model: llama3-8b-8192

@@ -8,8 +8,3 @@ CREATE TABLE IF NOT EXISTS match_results (
     status VARCHAR(20) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT now()
     );
-
-CREATE TABLE IF NOT EXISTS notice_embeddings (
-    notice_id UUID PRIMARY KEY,
-    embedding DOUBLE PRECISION[] NOT NULL
-);
