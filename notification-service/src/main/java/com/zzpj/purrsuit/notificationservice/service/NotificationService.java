@@ -19,7 +19,7 @@ public class NotificationService {
 
     public List<NotificationDTO> getUserNotifications(UUID userId) {
         return notificationRepository
-                .findByUSerIdOrderByCreatedAtDesc(userId)
+                .findByUserIdOrderByCreatedAtDesc(userId)
                 .stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());

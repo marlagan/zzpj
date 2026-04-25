@@ -6,7 +6,7 @@ info:
     name: "Purrsuit Notification Service"
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/notification_db
+    url: jdbc:postgresql://localhost:5433/notification_db
     username: admin
     password: admin
     driver-class-name: org.postgresql.Driver

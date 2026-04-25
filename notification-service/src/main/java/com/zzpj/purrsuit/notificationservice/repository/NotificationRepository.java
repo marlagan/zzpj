@@ -11,7 +11,7 @@ import java.util.UUID;
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, UUID> {
     //List<Notification> findByUserId(UUID userId);
-    List<Notification> findByUSerIdOrderByCreatedAtDesc(UUID userId);
+    List<Notification> findByUserIdOrderByCreatedAtDesc(UUID userId);
     //List<Notification> findByUSerIdOrderByCreatedAtAfter(UUID userId, LocalDateTime date);
 
     long countByUserId(UUID userId);
