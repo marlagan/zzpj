@@ -1,6 +1,6 @@
-package com.zzpj.purrsuit.perservice.model;
+package com.zzpj.purrsuit.petservice.model;
 
-import com.zzpj.purrsuit.perservice.enums.MatchStatus;
+import com.zzpj.purrsuit.petservice.enums.MatchStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;

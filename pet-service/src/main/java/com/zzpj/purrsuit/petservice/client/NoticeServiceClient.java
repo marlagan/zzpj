@@ -1,6 +1,6 @@
-package com.zzpj.purrsuit.perservice.client;
+package com.zzpj.purrsuit.petservice.client;
 
-import com.zzpj.purrsuit.perservice.dto.NoticeDto;
+import com.zzpj.purrsuit.petservice.dto.NoticeDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +18,7 @@ public class NoticeServiceClient {
     public NoticeDto getNotice(UUID noticeId){
 //        return webClientBuilder.build()
 //                .get()
-//                .uri("http://notice-service/api/v1/notices/{id}", noticeId)
+//                .uri("http://notice-service/api/notices/{id}", noticeId)
 //                .retrieve()
 //                .bodyToMono(NoticeDto.class)
 //                .block();
@@ -37,7 +37,7 @@ public class NoticeServiceClient {
     public List<NoticeDto> getConfirmedNoticesByType(String type){
 //        return webClientBuilder.build()
 //                .get()
-//                .uri("http://notice-service/api/v1/notices?type={type}&confirmed=true", type)
+//                .uri("http://notice-service/api/notices?type={type}&confirmed=true", type)
 //                .retrieve()
 //                .bodyToFlux(NoticeDto.class)
 //                .collectList()
@@ -48,7 +48,7 @@ public class NoticeServiceClient {
                 new NoticeDto(
                         UUID.randomUUID(),
                         "cat",
-                        "Orange cat seen near park, white paws, had a collar",
+                        "Light red-brown cat seen near park, white paws, had a collar",
                         52.2310,
                         21.0145,
                         type

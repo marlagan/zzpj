@@ -1,4 +1,4 @@
-package com.zzpj.purrsuit.perservice.enums;
+package com.zzpj.purrsuit.petservice.enums;
 
 public enum MatchStatus {
     PENDING,

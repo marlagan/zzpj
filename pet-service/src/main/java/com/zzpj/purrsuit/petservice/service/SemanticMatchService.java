@@ -1,4 +1,4 @@
-package com.zzpj.purrsuit.perservice.service;
+package com.zzpj.purrsuit.petservice.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +12,7 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class SemanticMatchService {
-    private final WebClient.Builder webClientBuilder;
+    private final WebClient groqWebClient;
 
     @Value("${llm.api.url}")
     private String llmApiUrl;
@@ -22,6 +22,9 @@ public class SemanticMatchService {
 
     @Value("${llm.api.model}")
     private String llmModel;
+
+    private record Messages(String role, String content){}
+    private record GroqRequest(String model, List<Messages> messages, double temperature, int max_tokens){}
 
     public double comparePetDescription(String descriptionA, String descriptionB){
         var prompt = """
@@ -37,20 +40,32 @@ public class SemanticMatchService {
                 Example: 0.85
                 """.formatted(descriptionA, descriptionB);
 
-        var requestedBody = Map.of(
-                "model", llmModel,
-                "messages", List.of(
-                        Map.of("role","user","content",prompt)
-                ),
-                "temperature", 0.1,
-                "max_tokens",15
+//        var messages = List.of("role","user","content",prompt);
+//        var requestedBody = new java.util.HashMap<String,Object>();
+//        requestedBody.put("model", llmModel);
+//        requestedBody.put("messages",messages);
+//        requestedBody.put("temperature",0.1);
+//        requestedBody.put("max_tokens",15);
+
+        var request = new GroqRequest(
+                llmModel,
+                List.of(new Messages("user",prompt)),
+                0.1,
+                15
         );
-        var response = webClientBuilder.build()
+
+        var response = groqWebClient
                 .post()
                 .uri(llmApiUrl + "/chat/completions")
                 .header("Authorization", "Bearer " + llmApiKey)
-                .bodyValue(requestedBody)
+                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .bodyValue(request)
                 .retrieve()
+                .onStatus(status -> status.is4xxClientError(), clientResponse ->
+                        clientResponse.bodyToMono(String.class)
+                                .doOnNext(body -> log.error("Groq error response: {}", body))
+                                .map(body -> new RuntimeException("Groq 400: " + body))
+                )
                 .bodyToMono(Map.class)
                 .block();
 

@@ -1,11 +1,11 @@
-package com.zzpj.purrsuit.perservice.service;
+package com.zzpj.purrsuit.petservice.service;
 
-import com.zzpj.purrsuit.perservice.client.NoticeServiceClient;
-import com.zzpj.purrsuit.perservice.client.NotificationServiceClient;
-import com.zzpj.purrsuit.perservice.dto.NoticeDto;
-import com.zzpj.purrsuit.perservice.model.MatchResult;
-import com.zzpj.purrsuit.perservice.enums.MatchStatus;
-import com.zzpj.purrsuit.perservice.repository.MatchResultRepository;
+import com.zzpj.purrsuit.petservice.client.NoticeServiceClient;
+import com.zzpj.purrsuit.petservice.client.NotificationServiceClient;
+import com.zzpj.purrsuit.petservice.dto.NoticeDto;
+import com.zzpj.purrsuit.petservice.model.MatchResult;
+import com.zzpj.purrsuit.petservice.enums.MatchStatus;
+import com.zzpj.purrsuit.petservice.repository.MatchResultRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -54,9 +54,12 @@ public class MatchingService {
     }
 
     public List<MatchResult> getMatchesForNotice(UUID noticeID){
-        return matchResultRepository.findByLostNotice(noticeID);
+        return matchResultRepository.findByLostNoticeId(noticeID);
     }
 
+    public Optional<MatchResult> getMatchDetail(UUID lostNoticeId, UUID seenNoticeId) {
+        return matchResultRepository.findByLostNoticeIdAndSeenNoticeId(lostNoticeId,seenNoticeId);
+    }
 
 
 }

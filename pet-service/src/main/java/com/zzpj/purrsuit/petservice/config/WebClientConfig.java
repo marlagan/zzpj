@@ -1,4 +1,4 @@
-package com.zzpj.purrsuit.perservice.config;
+package com.zzpj.purrsuit.petservice.config;
 
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
@@ -12,5 +12,10 @@ public class WebClientConfig {
     @LoadBalanced
     public WebClient.Builder webClientBuilder(){
         return WebClient.builder();
+    }
+
+    @Bean
+    public WebClient groqWebClient(){
+        return WebClient.builder().build();
     }
 }

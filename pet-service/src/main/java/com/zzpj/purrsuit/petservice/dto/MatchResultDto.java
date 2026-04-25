@@ -1,6 +1,6 @@
-package com.zzpj.purrsuit.perservice.dto;
+package com.zzpj.purrsuit.petservice.dto;
 
-import com.zzpj.purrsuit.perservice.enums.MatchStatus;
+import com.zzpj.purrsuit.petservice.enums.MatchStatus;
 import java.util.UUID;
 import java.time.LocalDateTime;
 

@@ -1,4 +1,4 @@
-package com.zzpj.purrsuit.perservice.dto;
+package com.zzpj.purrsuit.petservice.dto;
 
 import java.util.UUID;
 
