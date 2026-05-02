@@ -1,0 +1,55 @@
+import { Link, useLocation } from "react-router-dom";
+
+const styles: Record<string, React.CSSProperties> = {
+    nav: {
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        padding: "16px",
+        backgroundColor: "#9BA3A8",
+        borderBottom: "1px solid #ddd",
+    },
+    links: {
+        display: "flex",
+        gap: "20px",
+        alignItems: "center",
+    },
+    link: {
+        textDecoration: "none",
+        color: "black",
+    },
+
+};
+
+export default function Navbar() {
+    const token = localStorage.getItem("token");
+    const location = useLocation();
+
+    const handleLogout = () => {
+        localStorage.removeItem("token");
+        window.location.href = "/";
+    };
+
+    return (
+        <nav style={styles.nav}>
+            <div style={styles.links}>
+
+                {location.pathname !== "/" && (
+                    <Link to="/" style={styles.link}>Home</Link>
+                )}
+
+                {!token ? (
+                    <>
+                        <Link to="/login" style={styles.link}>Login</Link>
+                        <Link to="/register" style={styles.link}>Register</Link>
+                    </>
+                ) : (
+                    <>
+                        <Link to="/profile" style={styles.link}>Profile</Link>
+                        <button onClick={handleLogout}>Logout</button>
+                    </>
+                )}
+            </div>
+        </nav>
+    );
+}
