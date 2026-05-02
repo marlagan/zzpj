@@ -7,6 +7,8 @@ import Footer from "./components/Footer.tsx";
 import RegisterPage from "./pages/RegisterPage.tsx";
 import ContactPage from "./pages/ContactPage.tsx";
 import AboutWebsite from "./pages/AboutWebsite.tsx";
+import ProfilePage from "./pages/ProfilePage.tsx";
+import AdminPage from "./pages/AdminPage.tsx";
 
 function App() {
     return (
@@ -18,6 +20,8 @@ function App() {
                 <Route path="/register" element={<RegisterPage/>} />
                 <Route path="/contact" element={<ContactPage/>} />
                 <Route path="/about-website" element={<AboutWebsite/>} />
+                <Route path="/admin" element={<AdminPage/>} />
+                <Route path="/profile" element={<ProfilePage/>} />
             </Routes>
         <Footer/>
         </>

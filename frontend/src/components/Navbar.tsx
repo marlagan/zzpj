@@ -46,7 +46,8 @@ export default function Navbar() {
                 ) : (
                     <>
                         <Link to="/profile" style={styles.link}>Profile</Link>
-                        <button onClick={handleLogout}>Logout</button>
+                        <Link to="/admin" style={styles.link}>Admin</Link>
+                        <button onClick={handleLogout} style={styles.button}>Logout</button>
                     </>
                 )}
             </div>

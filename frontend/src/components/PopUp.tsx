@@ -76,7 +76,7 @@ export default function PopUp({ show, onClose, title, message, image }: PopUpPro
                 <p style={modalStyles.text}>{message}</p>
 
                 <button onClick={onClose} style={modalStyles.button}>
-                    OK -{">"}
+                    OK
                 </button>
             </div>
         </div>

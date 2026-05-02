@@ -55,7 +55,6 @@ const styles: Record<string, React.CSSProperties> = {
     catImage: {
         width: "120px",
         height: "auto",
-        imageRendering: "pixelated",
     },
     imageContainer: {
         width: "100%",
