@@ -1,4 +1,6 @@
-import React from 'react';
+import React, {useState} from 'react';
+import {register} from "../api/authApi.ts";
+
 
 const styles: Record<string, React.CSSProperties> = {
     page: {
@@ -68,37 +70,78 @@ const styles: Record<string, React.CSSProperties> = {
 };
 
 export default function RegisterPage() {
+
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [lastName, setLastName] = useState("");
+    const [firstName, setFirstName] = useState("");
+    const [phoneNumber, setPhoneNumber] = useState("");
+    const [error, setError] = useState("");
+
+
+    const handleRegistration = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError("");
+
+        try {
+                await register({ email, password, phoneNumber, firstName, lastName });
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setError(err.message);
+            } else {
+                setError("Registration failed");
+            }
+        }
+    };
+
     return (
         <div style={styles.page}>
             <main style={styles.main}>
                 <h1 style={styles.title}>JOIN THE PACK</h1>
 
-                <form style={styles.form} onSubmit={(e) => e.preventDefault()}>
+                <form style={styles.form} onSubmit={handleRegistration}>
                     <div style={styles.inputGroup}>
                         <label style={styles.label}>FIRST NAME *</label>
-                        <input type="text" style={styles.input} required placeholder="Enter first name" />
+                        <input type="firstNamer"
+                               value={firstName}
+                               onChange={(e) => setFirstName(e.target.value)}
+                               style={styles.input} required placeholder="Enter first name" />
                     </div>
 
                     <div style={styles.inputGroup}>
                         <label style={styles.label}>LAST NAME *</label>
-                        <input type="text" style={styles.input} required placeholder="Enter last name" />
+                        <input type="lastName"
+                               value={lastName}
+                               onChange={(e) => setLastName(e.target.value)}
+                               style={styles.input}
+                               required placeholder="Enter last name" />
                     </div>
 
                     <div style={styles.inputGroup}>
                         <label style={styles.label}>PHONE NUMBER *</label>
-                        <input type="tel" style={styles.input} required placeholder="123-456-789" />
+                        <input type="phoneNumber"
+                               value={phoneNumber}
+                               onChange={(e) => setPhoneNumber(e.target.value)}
+                               style={styles.input} required placeholder="123-456-789" />
                     </div>
 
 
                     <div style={styles.inputGroup}>
                         <label style={styles.label}>EMAIL *</label>
-                        <input type="email" style={styles.input} required placeholder="cat@purrsuit.com" />
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            style={styles.input} required placeholder="cat@purrsuit.com" />
                     </div>
 
 
                     <div style={styles.inputGroup}>
                         <label style={styles.label}>PASSWORD *</label>
-                        <input type="password" style={styles.input} required placeholder="••••••••" />
+                        <input type="password"
+                               value={password}
+                               onChange={(e) => setPassword(e.target.value)}
+                               style={styles.input} required placeholder="••••••••" />
                     </div>
 
                     <button type="submit" style={styles.submitButton}>
@@ -106,8 +149,10 @@ export default function RegisterPage() {
                     </button>
                 </form>
 
+                {error && <p style={styles.errorText}>{error}</p>}
+
                 <p style={{ fontFamily: '"Pixelify Sans", sans-serif', fontSize: "14px", marginTop: "20px" }}>
-                    Already have an account? <a href="/login" style={{ color: "#aa3bff" }}>Login here</a>
+                    Already have an account? <a href="/login">Login here</a>
                 </p>
             </main>
         </div>

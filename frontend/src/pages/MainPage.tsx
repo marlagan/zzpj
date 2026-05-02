@@ -1,4 +1,5 @@
 import catGif from "../assets/cat_gif.gif";
+import {Link} from "react-router-dom";
 
 const styles: Record<string, React.CSSProperties> = {
     page: {
@@ -62,7 +63,7 @@ const styles: Record<string, React.CSSProperties> = {
         boxShadow: "0px 4px 0px #555",
     },
     catImage: {
-        width: "180px",
+        width: "350px",
         height: "auto",
         imageRendering: "pixelated",
     },
@@ -75,6 +76,7 @@ const styles: Record<string, React.CSSProperties> = {
 };
 
 export default function MainPage() {
+    const token = localStorage.getItem("token");
     return (
         <div style={styles.page}>
             <main style={styles.main}>
@@ -85,17 +87,34 @@ export default function MainPage() {
 
                 <h1 style={styles.title}>PURRSUIT</h1>
 
-                {/* Sekcja przycisków w poziomie lub pionie */}
                 <div style={{ display: "flex", gap: "25px", flexWrap: "wrap", justifyContent: "center" }}>
 
                     <div style={styles.section}>
-                        <p style={styles.sectionText}>REPORT A MISSING<br/>CAT/DOG</p>
-                        <button style={styles.button}>GO -{">"}</button>
+                        {!token ? (
+                        <Link to="/login">
+                            <p style={styles.sectionText}>REPORT A MISSING<br/>CAT/DOG</p>
+                            <button style={styles.button}>GO</button>
+                        </Link>
+                            ):(
+                                <>
+                                <p style={styles.sectionText}>REPORT A MISSING<br/>CAT/DOG</p>
+                                 <button style={styles.button}>GO</button>
+                                </>
+                            )}
                     </div>
 
                     <div style={styles.section}>
-                        <p style={styles.sectionText}>SAW A STRAY<br/>CAT/DOG?</p>
-                        <button style={styles.button}>HELP -{">"}</button>
+                        {!token ? (
+                        <Link to="/login">
+                            <p style={styles.sectionText}>SAW A STRAY<br/>CAT/DOG?</p>
+                            <button style={styles.button}>HELP</button>
+                        </Link>
+                            ):(
+                                <>
+                                    <p style={styles.sectionText}>SAW A STRAY<br/>CAT/DOG?</p>
+                                    <button style={styles.button}>HELP</button>
+                                </>
+                            )}
                     </div>
 
                 </div>

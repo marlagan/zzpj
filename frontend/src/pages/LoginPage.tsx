@@ -132,7 +132,7 @@ export default function Login() {
                 {error && <p style={styles.errorText}>{error}</p>}
 
                 <p style={{ fontSize: "14px", marginTop: "20px" }}>
-                    New here? <a href="/register" style={{ color: "#aa3bff" }}>Create an account</a>
+                    New here? <a href="/register">Create an account</a>
                 </p>
             </main>
         </div>
