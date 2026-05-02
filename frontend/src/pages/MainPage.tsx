@@ -16,58 +16,67 @@ const styles: Record<string, React.CSSProperties> = {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        padding: "10px",
-        gap: "20px",
+        padding: "20px",
+        gap: "30px",
         overflowY: "auto",
     },
     title: {
-        fontSize: "48px",
+        fontSize: "64px",
         fontWeight: "bold",
-        letterSpacing: "4px",
-        marginBottom: "10px",
-        fontFamily: '"Pixelify Sans", sans-serif',
+        letterSpacing: "8px",
+        margin: "0",
+        color: "black",
+        textShadow: "4px 4px 0px #222",
+        textAlign: "center",
     },
     section: {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        gap: "10px",
-        marginBottom: "10px",
+        gap: "15px",
+        padding: "20px",
+        width: "280px",
+        border: "3px solid #222",
+        borderRadius: "8px",
+        background: "#f4f3ec",
+        boxShadow: "6px 6px 0px #222",
+    },
+    sectionText: {
+        textAlign: "center",
+        fontSize: "18px",
+        margin: 0,
+        lineHeight: "1.2",
+        fontFamily: '"Space Mono", monospace',
+        fontWeight: "bold",
     },
     button: {
-        padding: "10px 18px",
+        padding: "12px 20px",
         background: "#222",
         color: "white",
         border: "none",
-        borderRadius: "6px",
+        borderRadius: "4px",
         cursor: "pointer",
-    },
-    box: {
-        width: "80px",
-        height: "80px",
-        background: "#eee",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: "12px",
+        fontFamily: '"Pixelify Sans", sans-serif',
+        fontSize: "18px",
+        width: "100%",
+        boxShadow: "0px 4px 0px #555",
     },
     catImage: {
-        width: "80%",
-        maxWidth: "450px",
+        width: "180px",
         height: "auto",
-        display: "block",
+        imageRendering: "pixelated",
     },
     imageContainer: {
         width: "100%",
         display: "flex",
         justifyContent: "center",
+        marginBottom: "-10px",
     }
 };
 
 export default function MainPage() {
     return (
         <div style={styles.page}>
-
             <main style={styles.main}>
 
                 <div style={styles.imageContainer}>
@@ -76,14 +85,24 @@ export default function MainPage() {
 
                 <h1 style={styles.title}>PURRSUIT</h1>
 
-                <div style={styles.section}>
-                    <p>REPORT A MISSING<br/>CAT/DOG</p>
-                    <button style={styles.button}>Button</button>
+                {/* Sekcja przycisków w poziomie lub pionie */}
+                <div style={{ display: "flex", gap: "25px", flexWrap: "wrap", justifyContent: "center" }}>
+
+                    <div style={styles.section}>
+                        <p style={styles.sectionText}>REPORT A MISSING<br/>CAT/DOG</p>
+                        <button style={styles.button}>GO -{">"}</button>
+                    </div>
+
+                    <div style={styles.section}>
+                        <p style={styles.sectionText}>SAW A STRAY<br/>CAT/DOG?</p>
+                        <button style={styles.button}>HELP -{">"}</button>
+                    </div>
+
                 </div>
-                <div style={styles.section}>
-                    <p>SAW A STRAY<br/>CAT/DOG?</p>
-                    <button style={styles.button}>Button</button>
-                </div>
+
+                <p style={{ marginTop: "20px", fontSize: "14px", opacity: 0.6 }}>
+                    HELPING PAWS FIND THEIR WAY HOME
+                </p>
             </main>
         </div>
     );
