@@ -1,6 +1,8 @@
 import React, {useState} from 'react';
 import {register} from "../api/authApi.ts";
-
+import cat from "../assets/cat8.jpg";
+import catHappy from "../assets/cat7.jpg";
+import PopUp from "../components/PopUp.tsx";
 
 const styles: Record<string, React.CSSProperties> = {
     page: {
@@ -77,6 +79,8 @@ export default function RegisterPage() {
     const [firstName, setFirstName] = useState("");
     const [phoneNumber, setPhoneNumber] = useState("");
     const [error, setError] = useState("");
+    const [isRegistered, setIsRegistered] = useState(false);
+    const [isNotRegistered, setIsNotRegistered] = useState(false);
 
 
     const handleRegistration = async (e: React.FormEvent) => {
@@ -85,12 +89,14 @@ export default function RegisterPage() {
 
         try {
                 await register({ email, password, phoneNumber, firstName, lastName });
+                setIsRegistered(true);
         } catch (err: unknown) {
             if (err instanceof Error) {
                 setError(err.message);
             } else {
                 setError("Registration failed");
             }
+            setIsNotRegistered(true)
         }
     };
 
@@ -137,7 +143,7 @@ export default function RegisterPage() {
 
 
                     <div style={styles.inputGroup}>
-                        <label style={styles.label}>PASSWORD *</label>
+                        <label style={styles.label}>PASSWORD * 8 characters min</label>
                         <input type="password"
                                value={password}
                                onChange={(e) => setPassword(e.target.value)}
@@ -150,11 +156,24 @@ export default function RegisterPage() {
                 </form>
 
                 {error && <p style={styles.errorText}>{error}</p>}
-
                 <p style={{ fontFamily: '"Pixelify Sans", sans-serif', fontSize: "14px", marginTop: "20px" }}>
                     Already have an account? <a href="/login">Login here</a>
                 </p>
             </main>
+            <PopUp
+                show={isRegistered}
+                onClose={() => window.location.href = "/login"}
+                message="WELCOME TO THE PACK! YOUR ACCOUNT IS READY."
+                image={catHappy}
+                title={"SUCCESS"}
+            />
+            <PopUp
+                show={isNotRegistered}
+                onClose={() => window.location.href = "/register"}
+                message="REGISTRATION FAILURE."
+                image={cat}
+                title="FAILURE"
+            />
         </div>
     );
 }

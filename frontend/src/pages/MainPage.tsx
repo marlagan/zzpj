@@ -41,6 +41,7 @@ const styles: Record<string, React.CSSProperties> = {
         borderRadius: "8px",
         background: "#f4f3ec",
         boxShadow: "6px 6px 0px #222",
+        textDecoration: "none"
     },
     sectionText: {
         textAlign: "center",
@@ -49,6 +50,7 @@ const styles: Record<string, React.CSSProperties> = {
         lineHeight: "1.2",
         fontFamily: '"Space Mono", monospace',
         fontWeight: "bold",
+        textDecoration: "none"
     },
     button: {
         padding: "12px 20px",
@@ -61,6 +63,7 @@ const styles: Record<string, React.CSSProperties> = {
         fontSize: "18px",
         width: "100%",
         boxShadow: "0px 4px 0px #555",
+        textDecoration: "none"
     },
     catImage: {
         width: "350px",
