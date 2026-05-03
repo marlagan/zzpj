@@ -1,6 +1,5 @@
 package com.zzpj.purrsuit.userservice.controller;
 
-import com.zzpj.purrsuit.userservice.dto.UserCreationDTO;
 import com.zzpj.purrsuit.userservice.dto.UserRegistrationDTO;
 import com.zzpj.purrsuit.userservice.entity.User;
 import com.zzpj.purrsuit.userservice.enums.RoleName;
@@ -18,13 +17,12 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/api/admin/users")
-@CrossOrigin(origins = "http://localhost:3000")
 public class AdministratorPanelController {
 
     private UserService userService;
 
     @PostMapping
-    public ResponseEntity<String> createUser(@RequestBody UserCreationDTO dto) {
+    public ResponseEntity<String> createUser(@RequestBody UserRegistrationDTO dto) {
 
         try {
             userService.createUser(dto);
