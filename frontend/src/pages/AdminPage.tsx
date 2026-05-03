@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import PopUp from '../components/PopUp';
+import {changeRoleById, deleteUserById, getAllUsers} from "../api/authApi.ts";
+import type {User} from "../types/auth.ts";
+
 
 const styles: Record<string, React.CSSProperties> = {
     page: {
-        minHeight: "100vh", // Changed from height to minHeight
+        minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
         background: "#ffffff",
@@ -15,18 +18,18 @@ const styles: Record<string, React.CSSProperties> = {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        justifyContent: "flex-start", // Start at top for better mobile scrolling
+        justifyContent: "flex-start",
         padding: "20px 10px",
         gap: "20px",
     },
     title: {
-        fontSize: "clamp(24px, 8vw, 48px)", // Fluid typography for mobile
+        fontSize: "clamp(24px, 8vw, 48px)",
         fontWeight: "bold",
         letterSpacing: "2px",
         textAlign: "center",
         marginBottom: "10px",
     },
-    // Added missing button style
+
     button: {
         fontFamily: '"Pixelify Sans", sans-serif',
         cursor: "pointer",
@@ -96,34 +99,66 @@ const adminStyles: Record<string, React.CSSProperties> = {
     }
 };
 
-const MOCK_USERS = [
-    { id: 1, email: "admin@purrsuit.com", roleName: "ADMIN"},
-    { id: 2, email: "user1@gmail.com", roleName: "USER"},
-    { id: 3, email: "cat_lover@wp.pl", roleName: "USER"},
-];
-
 export default function AdminPage() {
-    const [users, setUsers] = useState(MOCK_USERS);
+    const [users, setUsers] = useState<User[]>([]);
     const [search, setSearch] = useState("");
     const [showModal, setShowModal] = useState(false);
+    const [loading, setLoading] = useState(true);
 
-    const deleteUser = (id: number) => {
-        if (window.confirm("ARE YOU SURE YOU WANT TO DELETE THIS USER?")) {
+    useEffect(() => {
+        const fetchUsers = async () => {
+            try {
+                const data = await getAllUsers();
+                setUsers(data);
+            } catch (error) {
+                console.error("Failed to fetch users:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchUsers();
+    }, []);
+
+    const deleteUser = async (id: number) => {
+        if (!window.confirm("ARE YOU SURE YOU WANT TO DELETE THIS USER?")) {
+            return;
+        }
+
+        try {
+            await deleteUserById(id);
+
             setUsers(users.filter(u => u.id !== id));
             setShowModal(true);
+        } catch (error) {
+            console.error("Failed to delete user:", error);
         }
     };
 
-    const toggleRole = (id: number) => {
-        setUsers(users.map(u => {
-            if (u.id === id) {
-                return { ...u, roleName: u.roleName === "ADMIN" ? "USER" : "ADMIN" };
-            }
-            return u;
-        }));
+    const toggleRole = async (id: number) => {
+        const user = users.find(u => u.id === id);
+        if (!user) return;
+
+        const newRole = user.roleName === "ADMIN" ? "USER" : "ADMIN";
+
+        try {
+            await changeRoleById(id, newRole);
+
+            setUsers(users.map(u =>
+                u.id === id ? { ...u, roleName: newRole } : u
+            ));
+        } catch (error) {
+            console.error("Failed to change role:", error);
+        }
     };
 
-    const filteredUsers = users.filter(u => u.email.toLowerCase().includes(search.toLowerCase()));
+    const filteredUsers = users.filter(u =>
+        u.email.toLowerCase().includes(search.toLowerCase())
+    );
+
+    if (loading) {
+        return <div style={styles.page}>LOADING USERS...</div>;
+    }
 
     return (
         <div style={styles.page}>
@@ -147,26 +182,39 @@ export default function AdminPage() {
                             <th style={adminStyles.th}>ACTIONS</th>
                         </tr>
                         </thead>
+
                         <tbody>
                         {filteredUsers.map(user => (
                             <tr key={user.id}>
                                 <td style={adminStyles.td}>{user.email}</td>
+
                                 <td style={adminStyles.td}>
-                                        <span style={user.roleName === "ADMIN" ? adminStyles.badgeAdmin : { border: "1px solid #222", padding: "2px 8px" }}>
-                                            {user.roleName}
-                                        </span>
+                                    <span
+                                        style={user.roleName === "ADMIN" ? adminStyles.badgeAdmin : {
+                                            border: "1px solid #222", padding: "2px 8px"
+                                        }}>
+                                        {user.roleName}
+                                    </span>
                                 </td>
+
                                 <td style={adminStyles.td}>
                                     <div style={adminStyles.actionsCell}>
                                         <button
                                             onClick={() => toggleRole(user.id)}
-                                            style={{...styles.button, padding: "8px", fontSize: "10px"}}
+                                            style={{ ...styles.button, padding: "8px", fontSize: "10px" }}
                                         >
-                                            ROLES
+                                            ROLE
                                         </button>
+
                                         <button
                                             onClick={() => deleteUser(user.id)}
-                                            style={{...styles.button, background: "#ff4444", color: "white", padding: "8px", fontSize: "10px"}}
+                                            style={{
+                                                ...styles.button,
+                                                background: "#ff4444",
+                                                color: "white",
+                                                padding: "8px",
+                                                fontSize: "10px"
+                                            }}
                                         >
                                             DEL
                                         </button>
