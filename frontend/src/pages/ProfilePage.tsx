@@ -1,8 +1,40 @@
 import React, { useState, useRef } from 'react';
 import PopUp from '../components/PopUp';
 
-
 const styles: Record<string, React.CSSProperties> = {
+    page: {
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        background: "#ffffff",
+        color: "#000000",
+        fontFamily: '"Pixelify Sans", sans-serif',
+    },
+    main: {
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "flex-start",
+        padding: "40px 15px",
+        gap: "20px",
+    },
+    title1: {
+        fontSize: "clamp(28px, 10vw, 48px)",
+        fontWeight: "bold",
+        letterSpacing: "3px",
+        textAlign: "center",
+        marginBottom: "10px",
+    },
+    card: {
+        background: "white",
+        border: "4px solid #222",
+        padding: "clamp(15px, 5vw, 30px)",
+        width: "100%",
+        maxWidth: "450px",
+        boxShadow: "6px 6px 0px #e5e4e7",
+        boxSizing: "border-box",
+    },
     avatarSection: {
         display: "flex",
         flexDirection: "column",
@@ -20,7 +52,7 @@ const styles: Record<string, React.CSSProperties> = {
         justifyContent: "center",
         alignItems: "center",
         overflow: "hidden",
-        boxShadow: "6px 6px 0px #aa3bff",
+        boxShadow: "6px 6px 0px #f4f3ec",
     },
     profileImage: {
         width: "100%",
@@ -37,23 +69,27 @@ const styles: Record<string, React.CSSProperties> = {
     },
     label: {
         fontFamily: '"Pixelify Sans", sans-serif',
-        fontSize: "18px",
+        fontSize: "16px",
         fontWeight: "bold",
     },
     input: {
-        padding: "10px",
+        padding: "12px",
         border: "3px solid #222",
         fontFamily: '"Space Mono", monospace',
-        fontSize: "14px",
+        fontSize: "16px",
         outline: "none",
-    },
-    card: {
-        background: "white",
-        border: "4px solid #222",
-        padding: "30px",
         width: "100%",
-        maxWidth: "500px",
-        boxShadow: "8px 8px 0px #e5e4e7",
+        boxSizing: "border-box",
+    },
+    button: {
+        background: "#222",
+        color: "white",
+        border: "none",
+        cursor: "pointer",
+        fontFamily: '"Pixelify Sans", sans-serif',
+        fontSize: "18px",
+        padding: "12px",
+        transition: "transform 0.1s",
     }
 };
 
@@ -71,7 +107,6 @@ export default function ProfilePage() {
 
     const handlePasswordChange = (e: React.FormEvent) => {
         e.preventDefault();
-        //api
         setShowModal(true);
     };
 
@@ -97,8 +132,9 @@ export default function ProfilePage() {
                             accept="image/*"
                         />
                         <button
+                            type="button"
                             onClick={() => fileInputRef.current?.click()}
-                            style={{...styles.button, fontSize: "14px", padding: "5px 10px"}}
+                            style={{...styles.button, fontSize: "14px", padding: "8px 15px", background: "#f0f0f0", color: "#222", border: "2px solid #222"}}
                         >
                             CHOOSE PHOTO
                         </button>

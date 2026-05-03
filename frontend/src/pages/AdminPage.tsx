@@ -3,72 +3,36 @@ import PopUp from '../components/PopUp';
 
 const styles: Record<string, React.CSSProperties> = {
     page: {
-        height: "100vh",
+        minHeight: "100vh", // Changed from height to minHeight
         display: "flex",
         flexDirection: "column",
         background: "#ffffff",
         color: "#000000",
         fontFamily: '"Pixelify Sans", sans-serif',
-        overflow: "hidden",
     },
     main: {
         flex: 1,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        justifyContent: "center",
-        padding: "10px",
+        justifyContent: "flex-start", // Start at top for better mobile scrolling
+        padding: "20px 10px",
         gap: "20px",
-        overflowY: "auto",
     },
     title: {
-        fontSize: "48px",
+        fontSize: "clamp(24px, 8vw, 48px)", // Fluid typography for mobile
         fontWeight: "bold",
-        letterSpacing: "4px",
+        letterSpacing: "2px",
+        textAlign: "center",
         marginBottom: "10px",
     },
-    form: {
-        display: "flex",
-        flexDirection: "column",
-        width: "100%",
-        maxWidth: "400px",
-        gap: "15px",
-    },
-    inputGroup: {
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "flex-start",
-        gap: "5px",
-    },
-    label: {
-        fontSize: "14px",
-        fontWeight: "bold",
-    },
-    input: {
-        width: "100%",
-        padding: "12px",
+    // Added missing button style
+    button: {
+        fontFamily: '"Pixelify Sans", sans-serif',
+        cursor: "pointer",
         border: "2px solid #222",
         borderRadius: "4px",
-        fontFamily: '"Space Mono", monospace',
-        fontSize: "16px",
-        boxSizing: "border-box",
-    },
-    submitButton: {
-        marginTop: "10px",
-        padding: "15px",
-        background: "#222",
-        color: "white",
-        border: "none",
-        borderRadius: "6px",
-        cursor: "pointer",
-        fontFamily: '"Pixelify Sans", sans-serif',
-        fontSize: "20px",
-    },
-    errorText: {
-        color: "#ff4d4d",
-        fontFamily: '"Space Mono", monospace',
-        fontSize: "14px",
-        marginTop: "10px",
+        background: "#eee",
     }
 };
 
@@ -77,47 +41,58 @@ const adminStyles: Record<string, React.CSSProperties> = {
         width: "100%",
         maxWidth: "500px",
         marginBottom: "20px",
+        padding: "0 10px",
+        boxSizing: "border-box"
     },
     input: {
         width: "100%",
         padding: "12px",
         border: "3px solid #222",
         fontFamily: '"Space Mono", monospace',
-        boxShadow: "4px 4px 0px #aa3bff",
+        boxShadow: "4px 4px 0px #f4f3ec",
         outline: "none",
+        boxSizing: "border-box"
     },
     tableContainer: {
-        width: "100%",
+        width: "95%",
         maxWidth: "800px",
         border: "4px solid #222",
-        boxShadow: "8px 8px 0px #e5e4e7",
+        boxShadow: "6px 6px 0px #f4f3ec",
         background: "#fff",
         overflowX: "auto",
+        WebkitOverflowScrolling: "touch",
     },
     table: {
         width: "100%",
+        minWidth: "600px",
         borderCollapse: "collapse",
         fontFamily: '"Space Mono", monospace',
     },
     th: {
         background: "#222",
         color: "#fff",
-        padding: "15px",
+        padding: "12px",
         textAlign: "left",
         fontFamily: '"Pixelify Sans", sans-serif',
-        fontSize: "18px",
+        fontSize: "16px",
     },
     td: {
-        padding: "12px 15px",
+        padding: "12px 10px",
         borderBottom: "2px solid #222",
         color: "#222",
+        fontSize: "14px"
     },
     badgeAdmin: {
-        background: "#aa3bff",
-        color: "black",
+        background: "#222",
+        color: "white",
         padding: "2px 8px",
         fontSize: "12px",
         fontWeight: "bold",
+    },
+    actionsCell: {
+        display: "flex",
+        gap: "5px",
+        flexWrap: "wrap"
     }
 };
 
@@ -153,7 +128,7 @@ export default function AdminPage() {
     return (
         <div style={styles.page}>
             <main style={styles.main}>
-                <h1 style={styles.title1}>ADMIN PANEL</h1>
+                <h1 style={styles.title}>ADMIN PANEL</h1>
 
                 <div style={adminStyles.searchContainer}>
                     <input
@@ -177,23 +152,25 @@ export default function AdminPage() {
                             <tr key={user.id}>
                                 <td style={adminStyles.td}>{user.email}</td>
                                 <td style={adminStyles.td}>
-                                        <span style={user.roleName === "ADMIN" ? adminStyles.badgeAdmin : {}}>
+                                        <span style={user.roleName === "ADMIN" ? adminStyles.badgeAdmin : { border: "1px solid #222", padding: "2px 8px" }}>
                                             {user.roleName}
                                         </span>
                                 </td>
                                 <td style={adminStyles.td}>
-                                    <button
-                                        onClick={() => toggleRole(user.id)}
-                                        style={{...styles.button, padding: "5px 10px", fontSize: "12px", marginRight: "5px"}}
-                                    >
-                                        PROMOTE/DEMOTE
-                                    </button>
-                                    <button
-                                        onClick={() => deleteUser(user.id)}
-                                        style={{...styles.button, background: "#ff4444", padding: "5px 10px", fontSize: "12px"}}
-                                    >
-                                        DELETE
-                                    </button>
+                                    <div style={adminStyles.actionsCell}>
+                                        <button
+                                            onClick={() => toggleRole(user.id)}
+                                            style={{...styles.button, padding: "8px", fontSize: "10px"}}
+                                        >
+                                            ROLES
+                                        </button>
+                                        <button
+                                            onClick={() => deleteUser(user.id)}
+                                            style={{...styles.button, background: "#ff4444", color: "white", padding: "8px", fontSize: "10px"}}
+                                        >
+                                            DEL
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}

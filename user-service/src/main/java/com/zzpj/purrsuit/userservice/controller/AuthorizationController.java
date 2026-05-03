@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor
 @Slf4j
 @RestController
+@CrossOrigin(origins = "http://localhost:3000")
 public class AuthorizationController {
 
     private UserService userService;
