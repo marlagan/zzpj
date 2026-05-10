@@ -3,3 +3,9 @@ spring:
     name: notice-service
   config:
     import: "optional:configserver:http://localhost:8888"
+
+groq:
+  api:
+    key: "TWÓJ_KLUCZ_GROQ"
+    url: "https://api.groq.com/openai/v1/chat/completions"
+    model: "llama3-70b-8192"
