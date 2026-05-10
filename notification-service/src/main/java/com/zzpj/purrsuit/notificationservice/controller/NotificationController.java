@@ -15,7 +15,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class NotificationController {
 
-    private NotificationService notificationService;
+    private final NotificationService notificationService;
 
     @GetMapping
     public ResponseEntity<List<NotificationDTO>> getNotifications(
@@ -25,7 +25,7 @@ public class NotificationController {
 
     @GetMapping("/unread-count")
     public ResponseEntity<Long> getUnreadCount(
-            @RequestHeader("X-User-Id") UUID userId) {
+            @RequestHeader("X-User-ID") UUID userId) {
         return ResponseEntity.ok(notificationService.countUnread(userId));
 
     }
