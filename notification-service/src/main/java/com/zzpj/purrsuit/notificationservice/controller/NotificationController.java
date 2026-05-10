@@ -2,6 +2,7 @@ package com.zzpj.purrsuit.notificationservice.controller;
 
 import com.zzpj.purrsuit.notificationservice.dto.NotificationDTO;
 import com.zzpj.purrsuit.notificationservice.entity.Notification;
+import com.zzpj.purrsuit.notificationservice.service.EmailService;
 import com.zzpj.purrsuit.notificationservice.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -28,5 +29,17 @@ public class NotificationController {
             @RequestHeader("X-User-ID") UUID userId) {
         return ResponseEntity.ok(notificationService.countUnread(userId));
 
+    }
+    // tymczasowy test
+    private final EmailService emailService;
+
+    @GetMapping("/test-email")
+    public ResponseEntity<String> testEmail() {
+        emailService.sendEmail(
+                "test@test.com",
+                "Test Purrsuit",
+                "Działa!"
+        );
+        return ResponseEntity.ok("Email wysłany!");
     }
 }
