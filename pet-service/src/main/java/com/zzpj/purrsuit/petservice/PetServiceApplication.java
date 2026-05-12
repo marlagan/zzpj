@@ -1,4 +1,4 @@
-package com.zzpj.purrsuit.perservice;
+package com.zzpj.purrsuit.petservice;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
