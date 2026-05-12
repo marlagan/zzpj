@@ -7,14 +7,20 @@ import com.zzpj.purrsuit.userservice.enums.RoleName;
 import com.zzpj.purrsuit.userservice.exceptions.*;
 import com.zzpj.purrsuit.userservice.repository.UserRepository;
 import lombok.AllArgsConstructor;
-import org.apache.catalina.LifecycleState;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @AllArgsConstructor
 @Service
@@ -34,12 +40,13 @@ public class UserService {
         String password = userRegistrationDTO.getPassword();
         String encodedPassword = passwordEncoder.encode(password);
 
-        if(userRepository.findByEmail(email).size() != 0){
+        Optional<User> userOld = userRepository.findByEmail(email);
+        if(!userOld.isEmpty()){
             throw new EmailAlreadyRegisteredException(messageSource.getMessage(
                     "error.email.registered", new Object[]{email}, LocaleContextHolder.getLocale()));
         }
 
-        if(userRepository.findByPhoneNumber(phoneNumber).size() != 0){
+        if(!userOld.isEmpty()){
             throw new PhoneNumberAlreadyRegisteredException(messageSource.getMessage(
                     "error.phone.registered", new Object[]{phoneNumber}, LocaleContextHolder.getLocale()));
         }
@@ -60,32 +67,35 @@ public class UserService {
 
         String email = userLoginDTO.getEmail();
         String password = userLoginDTO.getPassword();
-        User user = userRepository.findByEmail(email).get(0);
 
-        if(userRepository.findByEmail(email).size() != 0){
-            throw new EmailDoesNotExistException(messageSource.getMessage(
-                    "error.email.does.not.exist", new Object[]{email},
-                    LocaleContextHolder.getLocale()));
-        }
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new EmailDoesNotExistException(
+                        messageSource.getMessage("error.email.does.not.exist", new Object[]{email},
+                                LocaleContextHolder.getLocale())
+                ));
 
-        if(passwordEncoder.matches(password, user.getPassword())){
-            throw new IncorrectPasswordException(messageSource.getMessage(
-                    "error.password.incorrect",  new Object[]{},
-                    LocaleContextHolder.getLocale()));
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new IncorrectPasswordException(
+                    messageSource.getMessage("error.password.incorrect", new Object[]{},
+                            LocaleContextHolder.getLocale()
+                    )
+            );
         }
 
         return jwtService.generateToken(user);
     }
 
     public User getUserInfo(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new NoUserFoundException(
+                        messageSource.getMessage("error.user.not.found", new Object[]{id}, LocaleContextHolder.getLocale())
+                ));
+    }
 
-        if (!userRepository.existsById(id)){
-            throw new NoUserFoundException(
-                    messageSource.getMessage("error.user.not.found", new Object[]{id},
-                            LocaleContextHolder.getLocale()));
-        }
-
-        return userRepository.findById(id).get();
+    public User getUserInfoByEmail(String email) {
+        return userRepository.findByEmail(email).orElseThrow(() -> new NoUserFoundException(
+                        messageSource.getMessage("error.user.not.found", new Object[]{email}, LocaleContextHolder.getLocale())
+                ));
     }
 
     public void createUser(UserRegistrationDTO dto) {
@@ -118,6 +128,56 @@ public class UserService {
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
+    }
+
+    public boolean changePassword(long id, String newPassword, String oldPassword){
+        User user = getUserInfo(id);
+        String password = user.getPassword();
+        if(passwordEncoder.matches(oldPassword, password)){
+            throw new IncorrectPasswordException(
+                    messageSource.getMessage("error.password.change.failure", new Object[]{},
+                            LocaleContextHolder.getLocale()));
+        }
+        String encodedPassword =passwordEncoder.encode(newPassword);
+        user.setPassword(encodedPassword);
+        return true;
+    }
+
+    public String uploadUserImage(Long id, MultipartFile file) {
+
+        User user = getUserInfo(id);
+
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException(messageSource.getMessage("error.file.empty",
+                            null, LocaleContextHolder.getLocale())
+            );
+        }
+
+        try {
+            String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+
+            Path uploadPath = Paths.get("uploads");
+
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+
+            Path filePath = uploadPath.resolve(fileName);
+
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+            String imageUrl = "/uploads/" + fileName;
+
+            user.setImage(imageUrl);
+            userRepository.save(user);
+
+            return imageUrl;
+
+        } catch (IOException e) {
+            throw new FileStorageException(messageSource.getMessage(
+                    "error.file.upload.failed", null, LocaleContextHolder.getLocale())
+            );
+        }
     }
 
 }

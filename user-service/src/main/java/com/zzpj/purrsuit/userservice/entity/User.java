@@ -31,5 +31,6 @@ public class User {
     private String password;
     @Enumerated(EnumType.STRING)
     private RoleName roleName;
+    private String image;
 
 }

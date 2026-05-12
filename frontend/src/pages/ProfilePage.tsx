@@ -1,5 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import PopUp from '../components/PopUp';
+import {changePassword, getUserInfo, uploadUserImage} from "../api/authApi.ts";
+import cat from '../assets/cat6.jpg';
 
 const styles: Record<string, React.CSSProperties> = {
     page: {
@@ -95,19 +97,63 @@ const styles: Record<string, React.CSSProperties> = {
 
 export default function ProfilePage() {
     const [preview, setPreview] = useState<string | null>(null);
+    const [userImage, setUserImage] = useState<string | null>(null);
+
     const [showModal, setShowModal] = useState(false);
+
+    const [oldPassword, setOldPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    //const userId = getUserIdFromToken();
+    const userId = 2;
+
+    useEffect(() => {
+        const loadUser = async () => {
+            if (!userId) return;
+
+            try {
+                const user = await getUserInfo(userId);
+                setUserImage(user.image);
+            } catch (error) {
+                console.error("Failed to load user:", error);
+            }
+        };
+
+        loadUser();
+    }, [userId]);
+
+    const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file) {
-            setPreview(URL.createObjectURL(file));
+        if (!file || !userId) return;
+
+        setPreview(URL.createObjectURL(file));
+
+        try {
+            const imageUrl = await uploadUserImage(userId, file);
+
+            setUserImage(imageUrl);
+        } catch (error) {
+            console.error("Upload failed:", error);
         }
     };
 
-    const handlePasswordChange = (e: React.FormEvent) => {
+    const handlePasswordChange = async (e: React.FormEvent) => {
         e.preventDefault();
-        setShowModal(true);
+
+        if (!userId) return;
+
+        try {
+            await changePassword(userId, oldPassword, newPassword);
+
+            setOldPassword("");
+            setNewPassword("");
+            setShowModal(true);
+
+        } catch (error) {
+            console.error("Password change failed:", error);
+        }
     };
 
     return (
@@ -116,26 +162,30 @@ export default function ProfilePage() {
                 <h1 style={styles.title1}>USER PROFILE</h1>
 
                 <div style={styles.card}>
+
                     <div style={styles.avatarSection}>
                         <div style={styles.avatarCircle}>
-                            {preview ? (
-                                <img src={preview} style={styles.profileImage} alt="Profile" />
+                            {preview || userImage ? (
+                                <img src={preview || userImage || cat} style={styles.profileImage} alt="Profile"/>
                             ) : (
-                                <span style={{fontSize: "40px"}}>?</span>
+                                <span style={{ fontSize: "40px" }}>?</span>
                             )}
                         </div>
-                        <input
-                            type="file"
-                            ref={fileInputRef}
-                            onChange={handleImageChange}
-                            style={{display: "none"}}
-                            accept="image/*"
-                        />
+
+                        <input type="file" ref={fileInputRef} onChange={handleImageChange}
+                            style={{ display: "none" }} accept="image/*"/>
+
                         <button
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
-                            style={{...styles.button, fontSize: "14px", padding: "8px 15px", background: "#f0f0f0", color: "#222", border: "2px solid #222"}}
-                        >
+                            style={{
+                                ...styles.button,
+                                fontSize: "14px",
+                                padding: "8px 15px",
+                                background: "#f0f0f0",
+                                color: "#222",
+                                border: "2px solid #222",
+                            }}>
                             CHOOSE PHOTO
                         </button>
                     </div>
@@ -143,15 +193,27 @@ export default function ProfilePage() {
                     <form onSubmit={handlePasswordChange}>
                         <div style={styles.inputGroup}>
                             <label style={styles.label}>CURRENT PASSWORD</label>
-                            <input type="password" style={styles.input} required />
+                            <input
+                                type="password"
+                                style={styles.input}
+                                required
+                                value={oldPassword}
+                                onChange={(e) => setOldPassword(e.target.value)}
+                            />
                         </div>
 
                         <div style={styles.inputGroup}>
                             <label style={styles.label}>NEW PASSWORD</label>
-                            <input type="password" style={styles.input} required />
+                            <input
+                                type="password"
+                                style={styles.input}
+                                required
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                            />
                         </div>
 
-                        <button type="submit" style={{...styles.button, width: "100%", marginTop: "10px"}}>
+                        <button type="submit" style={{ ...styles.button, width: "100%", marginTop: "10px" }}>
                             UPDATE PASSWORD
                         </button>
                     </form>
@@ -162,7 +224,7 @@ export default function ProfilePage() {
                 show={showModal}
                 onClose={() => setShowModal(false)}
                 message="PROFILE UPDATED SUCCESSFULLY!"
-                title={"SUCCESS"}
+                title="SUCCESS"
             />
         </div>
     );

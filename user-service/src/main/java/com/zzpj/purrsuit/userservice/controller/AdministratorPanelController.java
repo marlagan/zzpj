@@ -16,7 +16,7 @@ import java.util.List;
 @AllArgsConstructor
 @Slf4j
 @RestController
-@RequestMapping("/api/admin/users")
+@CrossOrigin(origins = "http://localhost:3000")
 public class AdministratorPanelController {
 
     private UserService userService;
@@ -68,7 +68,7 @@ public class AdministratorPanelController {
         }
     }
 
-    @GetMapping
+    @GetMapping("/get-all-users")
     public ResponseEntity<?> getAllUsers() {
         try {
             List<User> users = userService.getAllUsers();
@@ -81,16 +81,38 @@ public class AdministratorPanelController {
         }
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/users/{id}")
     public ResponseEntity<?> getUserById(@PathVariable Long id) {
         try {
             User user = userService.getUserInfo(id);
             return ResponseEntity.ok(user);
 
         } catch (NoUserFoundException e) {
+            log.error("User not found: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(e.getMessage());
+
+        } catch (Exception e) {
+            log.error("Internal server error: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Internal server error");
+        }
+    }
+
+    @GetMapping("/users/email/{email}")
+    public ResponseEntity<?> getUserByEmail(@PathVariable String email) {
+        try {
+            User user = userService.getUserInfoByEmail(email);
+            return ResponseEntity.ok(user);
+
+        } catch (NoUserFoundException e) {
             log.error("Get user error: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
+        } catch (Exception e) {
+        log.error("Internal server error: ", e);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Internal server error");
+    }
     }
 
 }
