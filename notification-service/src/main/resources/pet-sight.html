@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<h2>Ktoś widział zwierzę podobne do Twojego!</h2>
+<p>Cześć <span th:text="${ownerName}"></span>,</p>
+<p>Otrzymaliśmy zgłoszenie że ktoś widział zwierzę podobne do <strong th:text="${petName}"></strong>.</p>
+<p>Lokalizacja zgłoszenia: <span th:text="${sightingLocation}"></span></p>
+<p>Opis: <span th:text="${sightingDescription}"></span></p>
+<p>Zaloguj się do aplikacji Purrsuit żeby zobaczyć szczegóły.</p>
+</body>
+</html>

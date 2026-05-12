@@ -11,4 +11,4 @@ spring:
       server:
         native:
           ##aboslute path to config-repo directory
-          search-locations: file:///D:\studia\studia\semestr 6\Java\zzpj\config-repo
+          search-locations: file:///C:/Users/Admin/Desktop/zzpj/config-repo
