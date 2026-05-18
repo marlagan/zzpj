@@ -12,6 +12,7 @@ import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 
@@ -25,7 +26,9 @@ public class JwtService {
     private Long expiration;
 
     private Key generateSignInKey(){
-        byte[] bytes = Decoders.BASE64.decode(this.secretKey);
+//        byte[] bytes = Decoders.BASE64.decode(this.secretKey);
+                byte[] bytes = secretKey.getBytes(StandardCharsets.UTF_8);
+
         return Keys.hmacShaKeyFor(bytes);
     }
 

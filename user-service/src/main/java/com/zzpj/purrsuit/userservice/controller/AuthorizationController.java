@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 @AllArgsConstructor
 @Slf4j
 @RestController
+@RequestMapping("/api/users")
 @CrossOrigin(origins = "http://localhost:3000")
 public class AuthorizationController {
 

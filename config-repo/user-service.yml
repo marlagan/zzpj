@@ -3,7 +3,7 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/user_db
+    url: jdbc:postgresql://postgres-db:5432/user_db
     username: admin
     password: admin
     driver-class-name: org.postgresql.Driver
@@ -17,7 +17,7 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: kafka:29092
     consumer:
       group-id: purrsuit-group
       auto-offset-reset: earliest
@@ -26,3 +26,7 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+jwt:
+  secret: "vQ2m9sP8xLk4ZrT1aW7nC6bYpD3fH8jK0sV5uR9xM2eQ="
+  expiration: 3600000

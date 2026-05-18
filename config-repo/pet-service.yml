@@ -6,7 +6,7 @@ info:
     name: "Purrsuit Pet Service"
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/pet_db
+    url: jdbc:postgresql://postgres-db:5432/pet_db
     username: admin
     password: admin
     driver-class-name: org.postgresql.Driver

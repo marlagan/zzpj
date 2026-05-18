@@ -2,6 +2,7 @@ package com.zzpj.purssuit.apigateway.security;
 
 import com.zzpj.purssuit.apigateway.service.JwtService;
 import io.jsonwebtoken.Claims;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.http.HttpHeaders;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Component
 public class JwtAuthenticationFilter implements GlobalFilter {
 
@@ -42,7 +44,7 @@ public class JwtAuthenticationFilter implements GlobalFilter {
             Claims claims = jwtService.extractAllClaims(token);
 
             String role = claims.get("role", String.class);
-            String userId = claims.getSubject();
+            String userId = String.valueOf(claims.get("user_id"));
 
             if (path.startsWith("/api/admin/") && !"ADMIN".equals(role)) {
                 return unauthorized(exchange);
@@ -57,6 +59,7 @@ public class JwtAuthenticationFilter implements GlobalFilter {
             return chain.filter(mutated);
 
         } catch (Exception e) {
+            log.error("Błąd walidacji tokenu: ", e);
             return unauthorized(exchange);
         }
     }

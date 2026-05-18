@@ -2,7 +2,7 @@ spring:
   application:
     name: pet-service
   config:
-    import: "configserver:http://localhost:8888"
+    import: "optional:configserver:http://localhost:8888"
   datasource:
     url: jdbc:postgresql://localhost:5432/postgres
     username: admin
