@@ -1,6 +1,7 @@
 package com.zzpj.purrsuit.mapservice.controller;
 
 import com.zzpj.purrsuit.mapservice.domain.Failure;
+import com.zzpj.purrsuit.mapservice.domain.SaveLocationRequest;
 import com.zzpj.purrsuit.mapservice.domain.Success;
 import com.zzpj.purrsuit.mapservice.entity.GeoLocation;
 import com.zzpj.purrsuit.mapservice.service.LocationMatchingService;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/maps/locations")
@@ -40,31 +42,32 @@ public class MapController {
     }
 
     @PostMapping
-    public ResponseEntity<GeoLocation> saveLocation(@RequestBody Map<String, Object> payload) {
-        Long petId = payload.containsKey("petId") ? Long.valueOf(payload.get("petId").toString()) : null;
-        Long sightingId = payload.containsKey("sightingId") ? Long.valueOf(payload.get("sightingId").toString()) : null;
-        double lat = Double.parseDouble(payload.get("lat").toString());
-        double lon = Double.parseDouble(payload.get("lon").toString());
-
-        return ResponseEntity.ok(locationService.save(petId, sightingId, lat, lon, null));
+    public ResponseEntity<GeoLocation> saveLocation(@RequestBody SaveLocationRequest request) {
+        // Dzięki Rekordowi mamy bezpieczeństwo typów (Type Safety) i czysty kod
+        return ResponseEntity.ok(locationService.save(
+                request.noticeId(),
+                request.noticeType(),
+                request.lat(),
+                request.lon(),
+                request.accuracyRadiusMeters()
+        ));
     }
 
     @GetMapping("/near")
     public ResponseEntity<List<GeoLocation>> getLocationsNear(
             @RequestParam double lat,
-            @RequestParam double lng,
+            @RequestParam double lon,
             @RequestParam double radiusKm) {
 
-        return ResponseEntity.ok(locationService.getLocationsNear(lat, lng, radiusKm));
+        return ResponseEntity.ok(locationService.getLocationsNear(lat, lon, radiusKm));
     }
 
-    @GetMapping("/matches/{sightingId}")
+    @GetMapping("/matches/{noticeId}")
     public ResponseEntity<List<GeoLocation>> getMatches(
-            @PathVariable Long sightingId,
+            @PathVariable UUID noticeId,
             @RequestParam String species,
             @RequestParam int daysMissing) {
 
-        // Uwaga: w przyszłości species i daysMissing powinien raczej pobierać FeignClient z NoticeService!
-        return ResponseEntity.ok(locationService.findMatchesForSighting(sightingId, species, daysMissing));
+        return ResponseEntity.ok(locationService.findMatchesForNotice(noticeId, species, daysMissing));
     }
 }

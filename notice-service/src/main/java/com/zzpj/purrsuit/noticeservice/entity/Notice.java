@@ -45,7 +45,7 @@ public class Notice {
     @Column(columnDefinition = "TEXT")
     private String additionalNotes;
 
-    private String photoUrl
+    private String photoUrl;
 
     @Column(columnDefinition = "geometry(Point,4326)", nullable = false)
     private Point location;
