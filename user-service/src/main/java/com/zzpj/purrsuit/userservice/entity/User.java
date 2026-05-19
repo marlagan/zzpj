@@ -40,7 +40,9 @@ public class User {
     @Column(nullable = false, unique = true)
     private String phoneNumber;
 
-    // POLE 'password' USUNIĘTE. Hasłami zarządza wyłącznie Keycloak.
+    // #todo Hasłami powinien zarządzać wyłącznie Keycloak.
+    @Size(message = "min 8 characters")
+    private String password;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @AllArgsConstructor
 @Slf4j
@@ -36,7 +37,7 @@ public class AdministratorPanelController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<String> deleteUser(@PathVariable UUID id) {
         try {
             userService.deleteUser(id);
             return ResponseEntity.ok("User deleted successfully");
@@ -52,7 +53,7 @@ public class AdministratorPanelController {
     }
 
     @PatchMapping("/{id}/role")
-    public ResponseEntity<String> changeRole(@PathVariable Long id, @RequestParam RoleName role) {
+    public ResponseEntity<String> changeRole(@PathVariable UUID id, @RequestParam RoleName role) {
 
         try {
             userService.changeRole(id, role);
@@ -82,7 +83,7 @@ public class AdministratorPanelController {
     }
 
     @GetMapping("/users/{id}")
-    public ResponseEntity<?> getUserById(@PathVariable Long id) {
+    public ResponseEntity<?> getUserById(@PathVariable UUID id) {
         try {
             User user = userService.getUserInfo(id);
             return ResponseEntity.ok(user);

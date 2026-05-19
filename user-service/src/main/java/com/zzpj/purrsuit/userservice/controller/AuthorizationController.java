@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.UUID;
+
 @AllArgsConstructor
 @Slf4j
 @RestController
@@ -49,7 +51,7 @@ public class AuthorizationController {
     }
 
     @PatchMapping("/change-password/{id}")
-    public ResponseEntity<String> changePassword(@Valid @RequestBody PasswordChangeDTO passwordChangeDTO, @PathVariable Long id){
+    public ResponseEntity<String> changePassword(@Valid @RequestBody PasswordChangeDTO passwordChangeDTO, @PathVariable UUID id){
 
         try {
             userService.changePassword(id, passwordChangeDTO.getNewPassword(), passwordChangeDTO.getOldPassword());
@@ -61,7 +63,7 @@ public class AuthorizationController {
     }
 
     @PostMapping("/upload/{id}")
-    public ResponseEntity<?> uploadImage(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> uploadImage(@PathVariable UUID id, @RequestParam("file") MultipartFile file) {
         try {
             String imagePath = userService.uploadUserImage(id, file);
             return ResponseEntity.ok(imagePath);

@@ -85,7 +85,7 @@ public class UserService {
         return jwtService.generateToken(user);
     }
 
-    public User getUserInfo(Long id) {
+    public User getUserInfo(UUID id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new NoUserFoundException(
                         messageSource.getMessage("error.user.not.found", new Object[]{id}, LocaleContextHolder.getLocale())
@@ -102,7 +102,7 @@ public class UserService {
         registerUser(dto);
     }
 
-    public void deleteUser(Long id) {
+    public void deleteUser(UUID id) {
 
         if (!userRepository.existsById(id)){
             throw new NoUserFoundException(
@@ -113,7 +113,7 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
-    public void changeRole(Long id, RoleName role) {
+    public void changeRole(UUID id, RoleName role) {
 
         if (!userRepository.existsById(id)){
             throw new NoUserFoundException(
@@ -130,7 +130,7 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public boolean changePassword(long id, String newPassword, String oldPassword){
+    public boolean changePassword(UUID id, String newPassword, String oldPassword){
         User user = getUserInfo(id);
         String password = user.getPassword();
         if(passwordEncoder.matches(oldPassword, password)){
@@ -143,7 +143,7 @@ public class UserService {
         return true;
     }
 
-    public String uploadUserImage(Long id, MultipartFile file) {
+    public String uploadUserImage(UUID id, MultipartFile file) {
 
         User user = getUserInfo(id);
 
