@@ -1,4 +1,9 @@
+version: '3.8'
+
 services:
+  # ==========================================
+  # INFRASTRUKTURA
+  # ==========================================
   postgres-db:
     image: postgres:15
     container_name: purrsuit-postgres
@@ -10,24 +15,206 @@ services:
       - POSTGRES_DB=postgres
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./init-db:/docker-entrypoint-initdb.d
+      - ./init-db:/docker-entrypoint-initdb.d:z
+
   zookeeper:
-      image: confluentinc/cp-zookeeper:latest
-      environment:
-        ZOOKEEPER_CLIENT_PORT: 2181
-        ZOOKEEPER_TICK_TIME: 2000
+    image: confluentinc/cp-zookeeper:7.3.2
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
   kafka:
-      image: confluentinc/cp-kafka:latest
-      depends_on:
-        - zookeeper
-      ports:
-        - "9092:9092"
-      environment:
-        KAFKA_BROKER_ID: 1
-        KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-        KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
-        KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-        KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-        KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    image: confluentinc/cp-kafka:7.3.2
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  # ==========================================
+  # SERWISY BAZOWE (CORE)
+  # ==========================================
+  cloud-config-service:
+    build:
+      context: .
+      args:
+        MODULE_NAME: cloud-config-service
+    container_name: cloud-config-service
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./config-repo:/app/config-repo:z
+    environment:
+      - SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS=file:///app/config-repo
+      - GROQ_API_KEY=${GROQ_API_KEY}
+
+  eureka-config-service:
+    build:
+      context: .
+      args:
+        MODULE_NAME: eureka-config-service
+    container_name: eureka-config-service
+    ports:
+      - "8761:8761"
+    environment:
+      - WAIT_FOR_CONFIG=cloud-config-service
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://cloud-config-service:8888
+    depends_on:
+      - cloud-config-service
+
+  api-gateway-service:
+    build:
+      context: .
+      args:
+        MODULE_NAME: api-gateway-service
+    container_name: api-gateway-service
+    ports:
+      - "8080:8087"
+    environment:
+      - WAIT_FOR_CONFIG=cloud-config-service
+      - WAIT_FOR_EUREKA=eureka-config-service
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://cloud-config-service:8888
+      - "eureka.client.serviceUrl.defaultZone=http://eureka-config-service:8761/eureka/"
+      - JWT_SECRET=BardzoTajnyKluczDoGenerowaniaTokenowJwtKtoryMaMinimum256BitowWiecMusiBycDlugi
+    depends_on:
+      - cloud-config-service
+      - eureka-config-service
+
+  # ==========================================
+  # MIKROSERWISY DOMENOWE
+  # ==========================================
+  user-service:
+    build:
+      context: .
+      args:
+        MODULE_NAME: user-service
+    container_name: user-service
+    ports:
+      - "8084:8084"
+    environment:
+      - WAIT_FOR_DB=postgres-db
+      - WAIT_FOR_CONFIG=cloud-config-service
+      - WAIT_FOR_EUREKA=eureka-config-service
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://cloud-config-service:8888
+      - "eureka.client.serviceUrl.defaultZone=http://eureka-config-service:8761/eureka/"
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/user_db
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - JWT_SECRET=BardzoTajnyKluczDoGenerowaniaTokenowJwtKtoryMaMinimum256BitowWiecMusiBycDlugi
+    depends_on:
+      - postgres-db
+      - cloud-config-service
+      - eureka-config-service
+
+  map-service:
+    build:
+      context: .
+      args:
+        MODULE_NAME: map-service
+    container_name: map-service
+    ports:
+      - "8082:8082"
+    environment:
+      - WAIT_FOR_DB=postgres-db
+      - WAIT_FOR_CONFIG=cloud-config-service
+      - WAIT_FOR_EUREKA=eureka-config-service
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://cloud-config-service:8888
+      - "eureka.client.serviceUrl.defaultZone=http://eureka-config-service:8761/eureka/"
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/map_db
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - OSM_EMAIL=${OSM_EMAIL}
+    depends_on:
+      - postgres-db
+      - cloud-config-service
+      - eureka-config-service
+
+  notice-service:
+    build:
+      context: .
+      args:
+        MODULE_NAME: notice-service
+    container_name: notice-service
+    ports:
+      - "8083:8083"
+    environment:
+      - WAIT_FOR_DB=postgres-db
+      - WAIT_FOR_CONFIG=cloud-config-service
+      - WAIT_FOR_EUREKA=eureka-config-service
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://cloud-config-service:8888
+      - "eureka.client.serviceUrl.defaultZone=http://eureka-config-service:8761/eureka/"
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/notice_db
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+    depends_on:
+      - postgres-db
+      - cloud-config-service
+      - eureka-config-service
+
+  pet-service:
+    build:
+      context: .
+      args:
+        MODULE_NAME: pet-service
+    container_name: pet-service
+    ports:
+      - "8085:8085"
+    environment:
+      - WAIT_FOR_DB=postgres-db
+      - WAIT_FOR_CONFIG=cloud-config-service
+      - WAIT_FOR_EUREKA=eureka-config-service
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://cloud-config-service:8888
+      - "eureka.client.serviceUrl.defaultZone=http://eureka-config-service:8761/eureka/"
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/pet_db
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - LLM_API_URL=https://api.groq.com/openai/v1
+    depends_on:
+      - postgres-db
+      - cloud-config-service
+      - eureka-config-service
+      - kafka
+
+  notification-service:
+    build:
+      context: .
+      args:
+        MODULE_NAME: notification-service
+    container_name: notification-service
+    ports:
+      - "8086:8086"
+    environment:
+      - WAIT_FOR_DB=postgres-db
+      - WAIT_FOR_CONFIG=cloud-config-service
+      - WAIT_FOR_EUREKA=eureka-config-service
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://cloud-config-service:8888
+      - "eureka.client.serviceUrl.defaultZone=http://eureka-config-service:8761/eureka/"
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/notification_db
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      # SPRING WYMAGA DANYCH DO MAILA ABY ZBUDOWAĆ BEAN 'JavaMailSender'
+      - SPRING_MAIL_HOST=smtp.gmail.com
+      - SPRING_MAIL_PORT=587
+      - SPRING_MAIL_USERNAME=test@gmail.com
+      - SPRING_MAIL_PASSWORD=test
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=true
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true
+    depends_on:
+      - postgres-db
+      - cloud-config-service
+      - eureka-config-service
+      - kafka
+
 volumes:
   pgdata:
