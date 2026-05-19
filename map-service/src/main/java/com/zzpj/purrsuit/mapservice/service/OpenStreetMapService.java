@@ -4,6 +4,7 @@ import com.zzpj.purrsuit.mapservice.domain.GeocodeResponse;
 import com.zzpj.purrsuit.mapservice.domain.GeocodingResult;
 import com.zzpj.purrsuit.mapservice.domain.LocationDto;
 import com.zzpj.purrsuit.mapservice.domain.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -12,8 +13,14 @@ public class OpenStreetMapService {
 
     private final RestClient restClient;
 
-    public OpenStreetMapService(RestClient.Builder builder) {
-        this.restClient = builder.baseUrl("https://nominatim.openstreetmap.org").build();
+    public OpenStreetMapService(
+            RestClient.Builder builder,
+            @Value("${osm.email}") String osmEmail
+    ) {
+        this.restClient = builder.baseUrl("https://nominatim.openstreetmap.org")
+                // Dynamicznie doklejamy wstrzyknięty e-mail do nagłówka
+                .defaultHeader("User-Agent", "Purrsuit-App/1.0 (" + osmEmail + ")")
+                .build();
     }
 
     public GeocodingResult geocodeAddress(String address) {
