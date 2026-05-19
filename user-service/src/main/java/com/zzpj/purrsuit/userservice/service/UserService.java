@@ -180,4 +180,30 @@ public class UserService {
         }
     }
 
+    public User registerOrUpdateUser(UserRegistrationDTO dto) {
+        Optional<User> existingUser = userRepository.findById(dto.getId());
+
+        if (existingUser.isPresent()) {
+            // Update existing user with fresh data from Keycloak
+            User user = existingUser.get();
+            user.setFirstName(dto.getFirstName());
+            user.setLastName(dto.getLastName());
+            user.setEmail(dto.getEmail());
+            return userRepository.save(user);
+        } else {
+            // Create a new user since they don't exist yet
+            User newUser = new User();
+            newUser.setId(dto.getId()); // Use Keycloak ID as the internal ID
+            newUser.setEmail(dto.getEmail());
+            newUser.setFirstName(dto.getFirstName());
+            newUser.setLastName(dto.getLastName());
+            newUser.setRoleName(RoleName.USER);
+
+            // Note: Password and phone number are likely not provided by Keycloak during sync
+            // You might want to handle them accordingly or leave them empty
+
+            return userRepository.save(newUser);
+        }
+    }
+
 }

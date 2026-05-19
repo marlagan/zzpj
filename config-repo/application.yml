@@ -24,6 +24,12 @@ spring:
           auth: true
           starttls:
             enable: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8081/realms/purrsuit-realm
+          jwk-set-uri: http://keycloak:8080/realms/purrsuit-realm/protocol/openid-connect/certs
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
@@ -31,6 +37,6 @@ springdoc:
     path: /v3/api-docs
 
 jwt:
-  secret: "vQ2m9sP8xLk4ZrT1aW7nC6bYpD3fH8jK0sV5uR9xM2eQ="
+  secret: ""
   expiration: 3600000
 

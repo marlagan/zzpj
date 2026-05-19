@@ -5,9 +5,12 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import java.util.UUID; // Add this import
 
 @Data
 public class UserRegistrationDTO {
+
+    private UUID id; // Add this field
 
     @NotBlank(message = "Provide firstName")
     private String firstName;
