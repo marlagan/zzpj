@@ -8,7 +8,11 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "match_results")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class MatchResult {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
