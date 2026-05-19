@@ -37,6 +37,7 @@ public class User {
     private String email;
 
     @Pattern(regexp = "^\\+?[1-9]\\d{7,14}$", message = "Invalid phone number format")
+    @Column(nullable = false, unique = true)
     private String phoneNumber;
 
     // POLE 'password' USUNIĘTE. Hasłami zarządza wyłącznie Keycloak.
