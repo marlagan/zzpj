@@ -39,6 +39,27 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.1
+    container_name: purrsuit-keycloak
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      # Postgresql
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://postgres-db:5432/keycloak
+      - KC_DB_USERNAME=admin
+      - KC_DB_PASSWORD=admin
+    # Dodana flaga --import-realm
+    command: ["start-dev", "--import-realm"]
+    ports:
+      - "8081:8080"
+    volumes:
+      # Podmontowanie katalogu z plikami importu
+      - ./keycloak-init:/opt/keycloak/data/import:z
+    depends_on:
+      - postgres-db
+
   # ==========================================
   # SERWISY BAZOWE (CORE)
   # ==========================================
@@ -87,6 +108,7 @@ services:
     depends_on:
       - cloud-config-service
       - eureka-config-service
+      - keycloak
 
   # ==========================================
   # MIKROSERWISY DOMENOWE
@@ -113,6 +135,7 @@ services:
       - postgres-db
       - cloud-config-service
       - eureka-config-service
+      - keycloak
 
   map-service:
     build:
