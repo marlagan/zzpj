@@ -20,7 +20,7 @@ public class NoticeServiceClient {
 //                .get()
 //                .uri("http://notice-service/api/notices/{id}", noticeId)
 //                .retrieve()
-//                .bodyToMono(NoticeDto.class)
+//                .bodyToMono(NoticeDto.java.class)
 //                .block();
 //        todo odkomentować jak notice-service zosatnie zaimplementowany
         log.warn("NoticeServiceClient: using stub for noticeId={}", noticeId);
@@ -39,7 +39,7 @@ public class NoticeServiceClient {
 //                .get()
 //                .uri("http://notice-service/api/notices?type={type}&confirmed=true", type)
 //                .retrieve()
-//                .bodyToFlux(NoticeDto.class)
+//                .bodyToFlux(NoticeDto.java.class)
 //                .collectList()
 //                .block();
 //        todo odkomentować jak notice-service zosatnie zaimplementowany
