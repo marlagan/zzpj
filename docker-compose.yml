@@ -177,6 +177,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/notice_db
       - SPRING_DATASOURCE_USERNAME=admin
       - SPRING_DATASOURCE_PASSWORD=admin
+      - GROQ_API_KEY=${GROQ_API_KEY}
     depends_on:
       - postgres-db
       - cloud-config-service
