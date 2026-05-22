@@ -18,6 +18,17 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+  kafka:
+    bootstrap-servers: kafka:29092
+    consumer:
+      group-id: pet-matching-group # Unikalna nazwa grupy dla tego serwisu
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        # Pozwalamy na deserializację z dowolnego pakietu (bezpieczne rozwiązanie przy mikroserwisach)
+        spring.json.trusted.packages: "*"
+
 llm:
   api:
     url: https://api.groq.com/openai/v1
