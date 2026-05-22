@@ -31,7 +31,13 @@ public class MapController {
 
     @Operation(summary = "Pobierz koordynaty z opisu (z użyciem AI)", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/analyze-location")
-    public ResponseEntity<?> getGeocode(@RequestBody String address) {
+    public ResponseEntity<?> getGeocode(@RequestBody Map<String, String> payload) {
+        String address = payload.get("address");
+
+        if (address == null || address.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Błąd: Pole 'address' nie może być puste");
+        }
+
         var result = mapClient.geocodeAddress(address);
 
         // Pattern Matching dla switch (JDK 21)

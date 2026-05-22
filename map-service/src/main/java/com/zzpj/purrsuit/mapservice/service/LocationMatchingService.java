@@ -11,11 +11,13 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class LocationMatchingService {
     private final GeoLocationRepository repository;
+    private final LocationMatchKafkaProducer kafkaProducer;
     private final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
 
     public GeoLocation save(UUID noticeId, String noticeType, double lat, double lon, Double accuracyRadiusMeters) {
@@ -39,15 +41,24 @@ public class LocationMatchingService {
 
     public List<GeoLocation> findMatchesForNotice(UUID noticeId, String species, int daysMissing) {
         GeoLocation originNotice = repository.findByNoticeId(noticeId)
-                .orElseThrow(() -> new IllegalArgumentException("Notice location not found in database"));;
+                .orElseThrow(() -> new IllegalArgumentException("Notice location not found in database"));
 
         double radiusInMeters = calculateSearchRadius(species, daysMissing);
 
-        return repository.findWithinRadius(
+        List<GeoLocation> nearbyLocations = repository.findWithinRadius(
                 originNotice.getLocation().getY(),
                 originNotice.getLocation().getX(),
                 radiusInMeters
         );
+
+        List<UUID> nearbyNoticeIds = nearbyLocations.stream()
+                .map(GeoLocation::getNoticeId)
+                .filter(id -> !id.equals(noticeId))
+                .collect(Collectors.toList());
+
+        kafkaProducer.sendNearbyNotices(noticeId, nearbyNoticeIds);
+
+        return nearbyLocations;
     }
 
     public List<GeoLocation> getLocationsNear(double lat, double lon, double radiusKm) {
