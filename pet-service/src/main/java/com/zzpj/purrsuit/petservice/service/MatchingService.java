@@ -1,8 +1,8 @@
 package com.zzpj.purrsuit.petservice.service;
 
 import com.zzpj.purrsuit.petservice.client.NoticeServiceClient;
-import com.zzpj.purrsuit.petservice.client.NotificationServiceClient;
 import com.zzpj.purrsuit.petservice.dto.NoticeDto;
+import com.zzpj.purrsuit.petservice.kafka.MatchResultProducer;
 import com.zzpj.purrsuit.petservice.model.MatchResult;
 import com.zzpj.purrsuit.petservice.enums.MatchStatus;
 import com.zzpj.purrsuit.petservice.repository.MatchResultRepository;
@@ -21,7 +21,7 @@ public class MatchingService {
     private final NoticeServiceClient noticeServiceClient;
     private final SemanticMatchService semanticMatchService;
     private final MatchResultRepository matchResultRepository;
-    private final NotificationServiceClient notificationServiceClient;
+    private final MatchResultProducer matchResultProducer;
 
     @Value("${matching.similarity.threshold:0.75}")
     private double threshold;
@@ -35,8 +35,20 @@ public class MatchingService {
                 .filter(c ->c.species().equals(notice.species()))
                 .map(candidate -> scoreCandidate(notice,candidate))
                 .filter(result -> result.getSimilarityScore() >= threshold)
-                .peek(notificationServiceClient::sendMatchNotification)
+                .peek(matchResultProducer::sendMatchNotification)
                 .toList();
+    }
+    public void processLocationMatchEvent(UUID lostNoticeId, List<NoticeDto> foundNotices) {
+        log.info("Rozpoczynanie analizy semantycznej dla zgłoszenia zagubienia: {} z {} kandydatami z okolicy",
+                lostNoticeId, foundNotices.size());
+
+        NoticeDto lostNotice = noticeServiceClient.getNotice(lostNoticeId);
+
+        foundNotices.stream()
+                .filter(candidate -> candidate.species().equalsIgnoreCase(lostNotice.species()))
+                .map(candidate -> scoreCandidate(lostNotice, candidate))
+                .filter(result -> result.getSimilarityScore() >= threshold)
+                .forEach(matchResultProducer::sendMatchNotification);
     }
 
     private MatchResult scoreCandidate(NoticeDto query, NoticeDto candidate){
