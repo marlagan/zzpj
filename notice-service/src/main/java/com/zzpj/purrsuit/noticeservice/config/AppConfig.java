@@ -1,7 +1,6 @@
 package com.zzpj.purrsuit.noticeservice.config;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -9,7 +8,6 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.NoSuchElementException;
 
@@ -19,12 +17,6 @@ public class AppConfig {
     @Bean
     public RestTemplate restTemplate() {
         return new RestTemplate();
-    }
-
-    @Bean
-    @LoadBalanced
-    public WebClient.Builder webClientBuilder() {
-        return WebClient.builder();
     }
 
     @Slf4j

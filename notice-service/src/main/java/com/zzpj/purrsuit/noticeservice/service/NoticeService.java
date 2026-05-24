@@ -1,6 +1,5 @@
 package com.zzpj.purrsuit.noticeservice.service;
 
-import com.zzpj.purrsuit.noticeservice.client.MapServiceClient;
 import com.zzpj.purrsuit.noticeservice.domain.NoticeStatus;
 import com.zzpj.purrsuit.noticeservice.domain.NoticeType;
 import com.zzpj.purrsuit.noticeservice.dto.NoticeDto.*;
@@ -28,17 +27,15 @@ public class NoticeService {
     private static final int SRID = 4326;
     private final GeometryFactory gf = new GeometryFactory(new PrecisionModel(), SRID);
 
-    private final NoticeRepository     noticeRepository;
-    private final AnimalVisionService  visionService;
-    private final NoticeEventProducer  eventProducer;
-    private final MapServiceClient     mapServiceClient;
-
-    // ── Tworzenie zgłoszenia LOST / FOUND ─────────────────────────────────────
+    private final NoticeRepository    noticeRepository;
+    private final AnimalVisionService visionService;
+    private final NoticeEventProducer eventProducer;
 
     /**
-     * Tworzy zgłoszenie i — jeśli dołączono zdjęcie — uruchamia analizę AI.
-     * Zwraca opis AI do weryfikacji. Status = PENDING_AI_REVIEW.
-     * Gdy brak zdjęcia: od razu ACTIVE.
+     * Tworzy zgłoszenie LOST lub FOUND.
+     * Groq generuje opis z danych formularza → zapisywany w aiGeneratedDescription.
+     * Ogłoszenie od razu wchodzi jako ACTIVE.
+     * Po zapisie: Kafka event → pet-service + rejestracja lokalizacji w map-service.
      */
     @Transactional
     public NoticeResponse createNotice(CreateNoticeRequest req) {
@@ -54,101 +51,17 @@ public class NoticeService {
                 .eventDate(req.eventDate)
                 .build();
 
-        // Groq generuje opis z danych formularza (niezależnie od zdjęcia)
         String aiDesc = visionService.generateDescription(
                 req.species, req.breed, req.colorDescription, req.additionalNotes);
-        if (aiDesc != null) {
-            notice.setAiGeneratedDescription(aiDesc);
-            // status pozostaje PENDING_AI_REVIEW — użytkownik musi potwierdzić
-        } else {
-            // Groq niedostępny — aktywuj od razu bez opisu AI
-            notice.setAiDescriptionConfirmed(true);
-            notice.setStatus(NoticeStatus.ACTIVE);
-        }
+        notice.setAiGeneratedDescription(aiDesc);
 
         notice = noticeRepository.save(notice);
-        log.info("Notice created id={} status={}", notice.getId(), notice.getStatus());
+        log.info("Notice created id={} type={}", notice.getId(), notice.getType());
 
-        if (notice.getStatus() == NoticeStatus.ACTIVE) {
-            publishAndRegisterLocation(notice);
-        }
-
-        return toResponse(notice);
-    }
-
-    // ── Potwierdzenie opisu AI ────────────────────────────────────────────────
-
-    /**
-     * Użytkownik zatwierdza lub poprawia opis AI → status ACTIVE.
-     * Publikuje event Kafka "notice-activated" do pet-service.
-     * Rejestruje lokalizację w map-service.
-     */
-    @Transactional
-    public NoticeResponse confirmAiDescription(UUID noticeId, ConfirmAiDescriptionRequest req) {
-        Notice notice = findById(noticeId);
-
-        if (notice.getStatus() != NoticeStatus.PENDING_AI_REVIEW) {
-            throw new IllegalStateException(
-                    "Notice " + noticeId + " nie czeka na potwierdzenie opisu (status=" + notice.getStatus() + ")");
-        }
-
-        notice.setAiGeneratedDescription(req.confirmedDescription);
-        notice.setAiDescriptionConfirmed(true);
-        notice.setStatus(NoticeStatus.ACTIVE);
-        notice = noticeRepository.save(notice);
-
-        log.info("AI description confirmed → ACTIVE, noticeId={}", noticeId);
         publishAndRegisterLocation(notice);
 
         return toResponse(notice);
     }
-
-    // ── Tworzenie obserwacji (SIGHTING) ───────────────────────────────────────
-
-    /**
-     * Ktoś widział zwierzę — zgłasza obserwację powiązaną z istniejącym LOST/FOUND.
-     * Sighting wchodzi od razu jako ACTIVE.
-     * Opcjonalne zdjęcie → opis AI (informacyjnie, nie blokuje aktywacji).
-     */
-    @Transactional
-    public NoticeResponse createSighting(CreateSightingRequest req) {
-        Notice parent = findById(req.parentNoticeId);
-        if (parent.getType() == NoticeType.SIGHTING) {
-            throw new IllegalArgumentException("Nie można zgłosić obserwacji obserwacji.");
-        }
-
-        Notice sighting = Notice.builder()
-                .type(NoticeType.SIGHTING)
-                .status(NoticeStatus.ACTIVE)
-                .reportedByUserId(req.reportedByUserId)
-                .species(parent.getSpecies())
-                .breed(parent.getBreed())
-                .additionalNotes(req.additionalNotes)
-                .photoUrl(req.photoUrl)
-                .parentNoticeId(req.parentNoticeId)
-                .location(toPoint(req.latitude, req.longitude))
-                .eventDate(req.eventDate)
-                .aiDescriptionConfirmed(true)
-                .build();
-
-        // Dla sightingu opis AI generujemy z danych rodzica + notatek obserwatora
-        if (req.additionalNotes != null && !req.additionalNotes.isBlank()) {
-            sighting.setAiGeneratedDescription(
-                    visionService.generateDescription(
-                            parent.getSpecies(), parent.getBreed(),
-                            parent.getColorDescription(), req.additionalNotes));
-        }
-
-        sighting = noticeRepository.save(sighting);
-        log.info("Sighting created id={} parentId={}", sighting.getId(), req.parentNoticeId);
-
-        // Kafka do pet-service + rejestracja lokalizacji
-        publishAndRegisterLocation(sighting);
-
-        return toResponse(sighting);
-    }
-
-    // ── Queries ───────────────────────────────────────────────────────────────
 
     @Transactional(readOnly = true)
     public NoticeResponse getById(UUID id) {
@@ -163,7 +76,6 @@ public class NoticeService {
 
     /**
      * Używane przez pet-service: GET /api/notices?type=LOST&status=ACTIVE
-     * Parametr "confirmed=true" w stubie pet-service przekładamy na status=ACTIVE.
      */
     @Transactional(readOnly = true)
     public List<NoticeResponse> getByTypeAndStatus(NoticeType type, NoticeStatus status) {
@@ -171,22 +83,16 @@ public class NoticeService {
                 .stream().map(this::toResponse).toList();
     }
 
-    @Transactional(readOnly = true)
-    public List<NoticeResponse> getSightingsForNotice(UUID parentNoticeId) {
-        return noticeRepository.findByParentNoticeId(parentNoticeId)
-                .stream().map(this::toResponse).toList();
-    }
-
-    // ── Status update (wywoływany przez pet-service przez Kafka lub REST) ─────
-
+    /**
+     * Wywoływany przez pet-service gdy znajdzie match (PENDING_MATCH)
+     * lub przez użytkownika (RESOLVED, CLOSED).
+     */
     @Transactional
     public NoticeResponse updateStatus(UUID id, NoticeStatus newStatus) {
         Notice notice = findById(id);
         notice.setStatus(newStatus);
         return toResponse(noticeRepository.save(notice));
     }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private Notice findById(UUID id) {
         return noticeRepository.findById(id)
@@ -198,8 +104,8 @@ public class NoticeService {
     }
 
     /**
-     * Opis przekazywany do pet-service jako "description".
-     * Priorytet: aiGeneratedDescription → colorDescription → additionalNotes → species.
+     * Priorytet opisu do pet-service:
+     * aiGeneratedDescription → colorDescription → additionalNotes → species
      */
     private String resolveDescription(Notice n) {
         if (n.getAiGeneratedDescription() != null && !n.getAiGeneratedDescription().isBlank())
@@ -212,27 +118,18 @@ public class NoticeService {
     }
 
     private void publishAndRegisterLocation(Notice n) {
-        // 1. Kafka event → pet-service
-        var event = eventProducer.buildEvent(
-                n.getId(), n.getType(), n.getReportedByUserId(),
-                n.getSpecies(), n.getBreed(),
-                resolveDescription(n),
-                n.getLocation().getY(), n.getLocation().getX(),
-                n.getEventDate());
-
-        if (n.getType() == NoticeType.SIGHTING) {
-            eventProducer.sendSightingCreated(event);
-        } else {
-            eventProducer.sendNoticeActivated(event);
-        }
-
-        // 2. Rejestracja lokalizacji w map-service
-        mapServiceClient.saveLocation(
+        // Event 1 → pet-service: noticeId + gatunek + opis
+        eventProducer.sendDescriptionEvent(
                 n.getId(),
-                n.getType().name(),
-                n.getLocation().getY(),
-                n.getLocation().getX(),
-                null);
+                n.getSpecies(),
+                resolveDescription(n));
+
+        // Event 2 → map-service: noticeId + typ + lokalizacja + data utworzenia
+        eventProducer.sendLocationEvent(
+                n.getId(),
+                n.getType(),
+                n.getLocation(),
+                n.getCreatedAt());
     }
 
     NoticeResponse toResponse(Notice n) {
@@ -247,8 +144,6 @@ public class NoticeService {
                 .additionalNotes(n.getAdditionalNotes())
                 .photoUrl(n.getPhotoUrl())
                 .aiGeneratedDescription(n.getAiGeneratedDescription())
-                .aiDescriptionConfirmed(n.isAiDescriptionConfirmed())
-                .parentNoticeId(n.getParentNoticeId())
                 .latitude(n.getLocation() != null ? n.getLocation().getY() : null)
                 .longitude(n.getLocation() != null ? n.getLocation().getX() : null)
                 .eventDate(n.getEventDate())
