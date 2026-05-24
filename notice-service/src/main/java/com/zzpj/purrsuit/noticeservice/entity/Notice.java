@@ -22,7 +22,7 @@ public class Notice {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private NoticeType type;
+    private NoticeType type; // LOST | FOUND
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -42,26 +42,14 @@ public class Notice {
     @Column(columnDefinition = "TEXT")
     private String additionalNotes;
 
-//    private String photoUrl;
+    private String photoUrl;
 
     /**
-     * Opis wygenerowany przez AI.
-     * Wyświetlany użytkownikowi do weryfikacji przed aktywacją ogłoszenia.
-     * Pole "description" udostępniane pet-service pochodzi właśnie stąd
+     * Opis wygenerowany przez Groq na podstawie danych z formularza.
+     * Pokazywany na liście ogłoszeń — pomaga innej osobie rozpoznać zwierzę.
      */
     @Column(columnDefinition = "TEXT")
     private String aiGeneratedDescription;
-
-    /**
-     * Czy użytkownik zatwierdził opis AI.
-     * Dopóki false — status = PENDING_AI_REVIEW, ogłoszenie niewidoczne.
-     */
-    @Column(nullable = false)
-    @Builder.Default
-    private boolean aiDescriptionConfirmed = false;
-
-    /** Wypełnione tylko dla type=SIGHTING. */
-    private UUID parentNoticeId;
 
     @Column(columnDefinition = "geometry(Point,4326)", nullable = false)
     private Point location;
@@ -78,7 +66,7 @@ public class Notice {
             this.createdAt = LocalDateTime.now();
         }
         if (this.status == null) {
-            this.status = NoticeStatus.PENDING_AI_REVIEW;
+            this.status = NoticeStatus.ACTIVE;
         }
     }
 }

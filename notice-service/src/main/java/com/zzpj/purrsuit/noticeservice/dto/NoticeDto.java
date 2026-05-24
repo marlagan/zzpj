@@ -15,38 +15,16 @@ public final class NoticeDto {
 
     @Data
     public static class CreateNoticeRequest {
-        @NotNull public NoticeType type;
+        @NotNull public NoticeType type;           // LOST lub FOUND
         @NotNull public UUID reportedByUserId;
         @NotNull public String species;
         public String breed;
         public String colorDescription;
         public String additionalNotes;
-        /** Groq nie analizuje zdjęć, można pomyśleć co z tym */
-//        public String photoUrl;
+        public String photoUrl;
         @NotNull public Double latitude;
         @NotNull public Double longitude;
         @NotNull public LocalDateTime eventDate;
-    }
-
-    @Data
-    public static class CreateSightingRequest {
-        /** ID ogłoszenia LOST/FOUND, do którego nawiązuje obserwacja. */
-        @NotNull public UUID parentNoticeId;
-        @NotNull public UUID reportedByUserId;
-//        public String photoUrl;
-        public String additionalNotes;
-        @NotNull public Double latitude;
-        @NotNull public Double longitude;
-        @NotNull public LocalDateTime eventDate;
-    }
-
-    @Data
-    public static class ConfirmAiDescriptionRequest {
-        /**
-         * Opis zatwierdzony/poprawiony przez użytkownika.
-         * Po potwierdzeniu status → ACTIVE i Kafka event do pet-service.
-         */
-        @NotNull public String confirmedDescription;
     }
 
     @Data
@@ -60,10 +38,8 @@ public final class NoticeDto {
         public String breed;
         public String colorDescription;
         public String additionalNotes;
-//        public String photoUrl;
+        public String photoUrl;
         public String aiGeneratedDescription;
-        public boolean aiDescriptionConfirmed;
-        public UUID parentNoticeId;
         public Double latitude;
         public Double longitude;
         public LocalDateTime eventDate;
@@ -71,15 +47,11 @@ public final class NoticeDto {
     }
 
     /**
-     * DTO odpowiadające dokładnie polu NoticeDto w pet-service:
+     * Odpowiada dokładnie rekordowi NoticeDto w pet-service:
      *   record NoticeDto(UUID id, String species, String description,
      *                    double latitude, double longitude, String type)
      *
-     * Używane przez GET /api/notices/{id} i GET /api/notices?type=&status=
-     * odpowiadające metodom NoticeServiceClient w pet-service.
-     *
-     * Pole "description" = aiGeneratedDescription (jeśli istnieje)
-     *                     lub colorDescription (fallback).
+     * Pole description = aiGeneratedDescription ?? colorDescription ?? species
      */
     @Data
     @Builder

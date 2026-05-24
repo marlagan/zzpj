@@ -6,32 +6,37 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.locationtech.jts.geom.Point;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
- * Event publikowany po aktywacji ogłoszenia (confirm-description)
- * oraz po utworzeniu sightingu.
- *
- * Używa StringSerializer (tak jak reszta serwisów w projekcie).
- * Obiekt serializowany do JSON przez ObjectMapper → String.
- */
+// Event 1: dla pet-service
+// Temat: "notice-activated"
+// Konsument: pet-service — szuka dopasowań na podstawie gatunku i opisu (Groq LLM)
+
 @Data
 @Builder
-class NoticeActivatedEvent {
+class NoticeDescriptionEvent {
     private UUID noticeId;
-    private NoticeType type;
-    private UUID reportedByUserId;
-    private String species;
-    private String breed;
+    private String species;       // gatunek (np. "kot")
     private String description;   // aiGeneratedDescription lub colorDescription
-    private Double latitude;
-    private Double longitude;
-    private LocalDateTime eventDate;
-    private LocalDateTime activatedAt;
+}
+
+// Event 2: dla map-service
+// Temat: "notice-location"
+// Konsument: map-service — rejestruje lokalizację, szuka ogłoszeń w promieniu
+
+@Data
+@Builder
+class NoticeLocationEvent {
+    private UUID noticeId;
+    private NoticeType noticeType;   // LOST | FOUND
+    private double latitude;         // z Point.getY()
+    private double longitude;        // z Point.getX()
+    private LocalDateTime createdAt;
 }
 
 @Slf4j
@@ -39,37 +44,42 @@ class NoticeActivatedEvent {
 @RequiredArgsConstructor
 public class NoticeEventProducer {
 
-    static final String TOPIC_NOTICE_ACTIVATED = "notice-activated";
-    static final String TOPIC_SIGHTING_CREATED  = "sighting-created";
+    static final String TOPIC_DESCRIPTION = "notice-activated";
+    static final String TOPIC_LOCATION    = "notice-location";
 
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
 
-    public void sendNoticeActivated(NoticeActivatedEvent event) {
-        send(TOPIC_NOTICE_ACTIVATED, event.getNoticeId().toString(), event);
-    }
-
-    public void sendSightingCreated(NoticeActivatedEvent event) {
-        send(TOPIC_SIGHTING_CREATED, event.getNoticeId().toString(), event);
-    }
-
-    NoticeActivatedEvent buildEvent(
-            UUID noticeId, NoticeType type, UUID userId,
-            String species, String breed, String description,
-            Double lat, Double lon,
-            LocalDateTime eventDate) {
-        return NoticeActivatedEvent.builder()
+    /**
+     * Event 1 → pet-service
+     * Przekazuje noticeId, gatunek i opis — pet-service porównuje opisy
+     * przez Groq LLM i szuka dopasowań (score ≥ 0.75).
+     */
+    public void sendDescriptionEvent(UUID noticeId, String species, String description) {
+        var event = NoticeDescriptionEvent.builder()
                 .noticeId(noticeId)
-                .type(type)
-                .reportedByUserId(userId)
                 .species(species)
-                .breed(breed)
                 .description(description)
-                .latitude(lat)
-                .longitude(lon)
-                .eventDate(eventDate)
-                .activatedAt(LocalDateTime.now())
                 .build();
+        send(TOPIC_DESCRIPTION, noticeId.toString(), event);
+    }
+
+    /**
+     * Event 2 → map-service
+     * Przekazuje noticeId, typ, lokalizację (Point rozłożony na lat/lon)
+     * i datę utworzenia — map-service rejestruje punkt i wykonuje
+     * zapytania ST_DWithin w PostGIS.
+     */
+    public void sendLocationEvent(UUID noticeId, NoticeType noticeType,
+                                  Point location, LocalDateTime createdAt) {
+        var event = NoticeLocationEvent.builder()
+                .noticeId(noticeId)
+                .noticeType(noticeType)
+                .latitude(location.getY())
+                .longitude(location.getX())
+                .createdAt(createdAt)
+                .build();
+        send(TOPIC_LOCATION, noticeId.toString(), event);
     }
 
     private void send(String topic, String key, Object payload) {

@@ -2,7 +2,6 @@ package com.zzpj.purrsuit.noticeservice.controller;
 
 import com.zzpj.purrsuit.noticeservice.domain.NoticeStatus;
 import com.zzpj.purrsuit.noticeservice.domain.NoticeType;
-import com.zzpj.purrsuit.noticeservice.dto.NoticeDto;
 import com.zzpj.purrsuit.noticeservice.dto.NoticeDto.*;
 import com.zzpj.purrsuit.noticeservice.service.NoticeService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,9 +25,11 @@ public class NoticeController {
 
     /**
      * Tworzy zgłoszenie LOST lub FOUND.
+     * Groq automatycznie generuje opis z danych formularza.
+     * Ogłoszenie wchodzi od razu jako ACTIVE.
      */
     @PostMapping
-    @Operation(summary = "Utwórz zgłoszenie LOST/FOUND")
+    @Operation(summary = "Utwórz zgłoszenie LOST lub FOUND")
     public ResponseEntity<NoticeResponse> createNotice(
             @Valid @RequestBody CreateNoticeRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -36,32 +37,8 @@ public class NoticeController {
     }
 
     /**
-     * Użytkownik zatwierdza lub poprawia opis wygenerowany przez AI.
-     * Po tej operacji status → ACTIVE, Kafka event → pet-service.
-     */
-    @PostMapping("/{id}/confirm-description")
-    @Operation(summary = "Potwierdź / popraw opis AI — aktywuje zgłoszenie")
-    public ResponseEntity<NoticeResponse> confirmAiDescription(
-            @PathVariable UUID id,
-            @Valid @RequestBody ConfirmAiDescriptionRequest request) {
-        return ResponseEntity.ok(noticeService.confirmAiDescription(id, request));
-    }
-
-    /**
-     * Ktoś widział zwierzę — obserwacja powiązana z istniejącym LOST/FOUND.
-     * Wchodzi od razu jako ACTIVE, wysyła Kafka "sighting-created".
-     */
-    @PostMapping("/sightings")
-    @Operation(summary = "Zgłoś obserwację zwierzęcia (SIGHTING)")
-    public ResponseEntity<NoticeResponse> createSighting(
-            @Valid @RequestBody CreateSightingRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(noticeService.createSighting(request));
-    }
-
-    /**
-     * Pobiera zgłoszenie po ID — używane przez pet-service (NoticeServiceClient).
-     * Zwraca NoticeResponse; pet-service mapuje sam przez swój NoticeDto record.
+     * Pobiera zgłoszenie po ID.
+     * Używane przez pet-service (NoticeServiceClient).
      */
     @GetMapping("/{id}")
     @Operation(summary = "Pobierz zgłoszenie po ID")
@@ -70,9 +47,8 @@ public class NoticeController {
     }
 
     /**
-     * Filtrowanie po type i status.
+     * Lista zgłoszeń z filtrem po type i status.
      * Pet-service woła: GET /api/notices?type=LOST&status=ACTIVE
-     * (stub używał ?type=LOST&confirmed=true → mapujemy confirmed=true jako status=ACTIVE)
      */
     @GetMapping
     @Operation(summary = "Lista zgłoszeń — filtr po type i status")
@@ -89,18 +65,8 @@ public class NoticeController {
     }
 
     /**
-     * Lista obserwacji (SIGHTING) dla danego zgłoszenia.
-     * Front może pokazać "inni widzieli tego kota w tych miejscach".
-     */
-    @GetMapping("/{id}/sightings")
-    @Operation(summary = "Obserwacje powiązane ze zgłoszeniem")
-    public ResponseEntity<List<NoticeResponse>> getSightings(@PathVariable UUID id) {
-        return ResponseEntity.ok(noticeService.getSightingsForNotice(id));
-    }
-
-    /**
-     * Zmiana statusu — używana przez pet-service gdy znajdzie match
-     * (PENDING_MATCH) lub przez użytkownika (RESOLVED, CLOSED).
+     * Zmiana statusu — wywoływana przez pet-service (PENDING_MATCH)
+     * lub przez użytkownika (RESOLVED, CLOSED).
      */
     @PatchMapping("/{id}/status")
     @Operation(summary = "Zmień status zgłoszenia")
