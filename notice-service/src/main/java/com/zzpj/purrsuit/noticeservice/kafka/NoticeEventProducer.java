@@ -45,7 +45,7 @@ class NoticeLocationEvent {
 public class NoticeEventProducer {
 
     static final String TOPIC_DESCRIPTION = "notice-activated";
-    static final String TOPIC_LOCATION    = "notice-location";
+    static final String TOPIC_LOCATION    = "notice-location-topic";
 
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
