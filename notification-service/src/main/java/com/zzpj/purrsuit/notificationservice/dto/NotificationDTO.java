@@ -2,7 +2,6 @@ package com.zzpj.purrsuit.notificationservice.dto;
 
 import com.zzpj.purrsuit.notificationservice.enums.NotificationChannel;
 import com.zzpj.purrsuit.notificationservice.enums.NotificationType;
-import jdk.jshell.Snippet;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
