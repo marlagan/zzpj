@@ -1,14 +1,16 @@
 package com.zzpj.purrsuit.petservice.service;
 
-import com.zzpj.purrsuit.petservice.client.NoticeServiceClient;
-import com.zzpj.purrsuit.petservice.dto.NoticeDto;
+import com.zzpj.purrsuit.petservice.entity.PetNotice;
+import com.zzpj.purrsuit.petservice.event.NoticeCreatedEvent;
 import com.zzpj.purrsuit.petservice.enums.MatchStatus;
 import com.zzpj.purrsuit.petservice.kafka.MatchResultProducer;
 import com.zzpj.purrsuit.petservice.model.MatchResult;
 import com.zzpj.purrsuit.petservice.repository.MatchResultRepository;
+import com.zzpj.purrsuit.petservice.repository.PetNoticeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -16,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -30,7 +33,7 @@ import static org.mockito.Mockito.*;
 class MatchingServiceTest {
 
     @Mock
-    private NoticeServiceClient noticeServiceClient;
+    private PetNoticeRepository petNoticeRepository;
 
     @Mock
     private SemanticMatchService semanticMatchService;
@@ -44,8 +47,8 @@ class MatchingServiceTest {
     @InjectMocks
     private MatchingService matchingService;
 
-    private final UUID lostNoticeId = UUID.randomUUID();
-    private final UUID seenNoticeId = UUID.randomUUID();
+    private final UUID newNoticeId = UUID.randomUUID();
+    private final UUID candidateId = UUID.randomUUID();
 
     @BeforeEach
     void setUp() {
@@ -55,107 +58,96 @@ class MatchingServiceTest {
     }
 
     @Test
-    void findMatches_ShouldReturnMatches_WhenScoreIsAboveThreshold() {
-        NoticeDto lostNotice = mock(NoticeDto.class);
-        when(lostNotice.id()).thenReturn(lostNoticeId);
-        when(lostNotice.type()).thenReturn("LOST");
-        when(lostNotice.species()).thenReturn("Dog");
-        when(lostNotice.description()).thenReturn("Czarny mops");
+    void handleIncomingNotice_ShouldSaveLocallyAndFindMatch_WhenScoreIsAboveThreshold() {
+        NoticeCreatedEvent event = new NoticeCreatedEvent(
+                newNoticeId, "Dog", "Czarny mops", "LOST"
+        );
 
-        NoticeDto seenNotice = mock(NoticeDto.class);
-        when(seenNotice.id()).thenReturn(seenNoticeId);
-        when(seenNotice.type()).thenReturn("SEEN");
-        when(seenNotice.species()).thenReturn("Dog");
-        when(seenNotice.description()).thenReturn("Czarny pies mops");
+        PetNotice candidate = PetNotice.builder()
+                .noticeId(candidateId)
+                .type("FOUND")
+                .species("Dog")
+                .description("Czarny pies mops")
+                .build();
 
-        when(noticeServiceClient.getNotice(lostNoticeId)).thenReturn(lostNotice);
-        when(noticeServiceClient.getConfirmedNoticesByType("SEEN")).thenReturn(List.of(seenNotice));
-        when(semanticMatchService.comparePetDescription("Czarny mops", "Czarny pies mops")).thenReturn(0.85);
+        when(petNoticeRepository.findByTypeAndSpecies("FOUND", "Dog"))
+                .thenReturn(List.of(candidate));
 
-        List<MatchResult> results = matchingService.findMatches(lostNoticeId);
+        when(semanticMatchService.comparePetDescription("Czarny mops", "Czarny pies mops"))
+                .thenReturn(0.85);
 
-        assertEquals(1, results.size());
-        MatchResult result = results.get(0);
-        assertEquals(0.85, result.getSimilarityScore());
 
-        verify(matchResultRepository, atLeastOnce()).save(any(MatchResult.class));
+        matchingService.handleIncomingNotice(event);
+
+        ArgumentCaptor<PetNotice> noticeCaptor = ArgumentCaptor.forClass(PetNotice.class);
+        verify(petNoticeRepository, times(1)).save(noticeCaptor.capture());
+        assertEquals(newNoticeId, noticeCaptor.getValue().getNoticeId());
+        assertEquals("LOST", noticeCaptor.getValue().getType());
+
+        ArgumentCaptor<MatchResult> resultCaptor = ArgumentCaptor.forClass(MatchResult.class);
+        verify(matchResultRepository, times(1)).save(resultCaptor.capture());
+        MatchResult savedResult = resultCaptor.getValue();
+        assertEquals(newNoticeId, savedResult.getLostNoticeId());
+        assertEquals(candidateId, savedResult.getSeenNoticeId());
+        assertEquals(0.85, savedResult.getSimilarityScore());
+        assertEquals(MatchStatus.PENDING, savedResult.getStatus());
+
         verify(matchResultProducer, times(1)).sendMatchNotification(any(MatchResult.class));
     }
 
     @Test
-    void findMatches_ShouldNotReturnMatches_WhenScoreIsBelowThreshold() {
+    void handleIncomingNotice_ShouldNotPublishMatch_WhenScoreIsBelowThreshold() {
+        NoticeCreatedEvent event = new NoticeCreatedEvent(
+                newNoticeId, "Dog", "Czarny mops", "LOST"
+        );
 
-        NoticeDto lostNotice = mock(NoticeDto.class);
-        when(lostNotice.id()).thenReturn(lostNoticeId);
-        when(lostNotice.type()).thenReturn("LOST");
-        when(lostNotice.species()).thenReturn("Dog");
-        when(lostNotice.description()).thenReturn("Czarny mops");
+        PetNotice candidate = PetNotice.builder()
+                .noticeId(candidateId)
+                .type("FOUND")
+                .species("Dog")
+                .description("Biały owczarek")
+                .build();
 
-        NoticeDto seenNotice = mock(NoticeDto.class);
-        when(seenNotice.id()).thenReturn(seenNoticeId);
-        when(seenNotice.type()).thenReturn("SEEN");
-        when(seenNotice.species()).thenReturn("Dog");
-        when(seenNotice.description()).thenReturn("Biały kot");
+        when(petNoticeRepository.findByTypeAndSpecies("FOUND", "Dog"))
+                .thenReturn(List.of(candidate));
 
-        when(noticeServiceClient.getNotice(lostNoticeId)).thenReturn(lostNotice);
-        when(noticeServiceClient.getConfirmedNoticesByType("SEEN")).thenReturn(List.of(seenNotice));
-        when(semanticMatchService.comparePetDescription("Czarny mops", "Biały kot")).thenReturn(0.40);
+        when(semanticMatchService.comparePetDescription("Czarny mops", "Biały owczarek"))
+                .thenReturn(0.40); // Score poniżej 0.75
 
-        List<MatchResult> results = matchingService.findMatches(lostNoticeId);
+        matchingService.handleIncomingNotice(event);
 
-        assertTrue(results.isEmpty());
-        verify(matchResultRepository, atLeastOnce()).save(any(MatchResult.class));
+        verify(petNoticeRepository, times(1)).save(any(PetNotice.class));
+
+        verify(matchResultRepository, never()).save(any(MatchResult.class));
+
         verify(matchResultProducer, never()).sendMatchNotification(any(MatchResult.class));
     }
 
     @Test
-    void findMatches_ShouldIgnoreCandidatesWithDifferentSpecies() {
-        NoticeDto lostNotice = mock(NoticeDto.class);
-        when(lostNotice.id()).thenReturn(lostNoticeId);
-        when(lostNotice.type()).thenReturn("LOST");
-        when(lostNotice.species()).thenReturn("Dog");
+    void handleIncomingNotice_ShouldStopProcessing_WhenNoCandidatesFound() {
+        NoticeCreatedEvent event = new NoticeCreatedEvent(
+                newNoticeId, "Cat", "Biały kot", "FOUND"
+        );
 
-        NoticeDto seenNotice = mock(NoticeDto.class);
-        when(seenNotice.species()).thenReturn("Cat");
+        when(petNoticeRepository.findByTypeAndSpecies("LOST", "Cat"))
+                .thenReturn(Collections.emptyList());
 
-        when(noticeServiceClient.getNotice(lostNoticeId)).thenReturn(lostNotice);
-        when(noticeServiceClient.getConfirmedNoticesByType("SEEN")).thenReturn(List.of(seenNotice));
+        matchingService.handleIncomingNotice(event);
 
-        List<MatchResult> results = matchingService.findMatches(lostNoticeId);
+        verify(petNoticeRepository, times(1)).save(any(PetNotice.class));
 
-        assertTrue(results.isEmpty());
         verify(semanticMatchService, never()).comparePetDescription(anyString(), anyString());
-    }
 
-    @Test
-    void processLocationMatchEvent_ShouldProcessCaseInsensitiveSpeciesAndNotifyIfAboveThreshold() {
-        NoticeDto lostNotice = mock(NoticeDto.class);
-        when(lostNotice.id()).thenReturn(lostNoticeId);
-        when(lostNotice.type()).thenReturn("LOST"); // FIX: Zapobiega rzucaniu NullPointerException w scoreCandidate
-        when(lostNotice.species()).thenReturn("DOG");
-        when(lostNotice.description()).thenReturn("Czarny mops");
-
-        NoticeDto seenNotice = mock(NoticeDto.class);
-        when(seenNotice.id()).thenReturn(seenNoticeId);
-        when(seenNotice.type()).thenReturn("SEEN");
-        when(seenNotice.species()).thenReturn("dog");
-        when(seenNotice.description()).thenReturn("Mops znaleziony");
-
-        when(noticeServiceClient.getNotice(lostNoticeId)).thenReturn(lostNotice);
-        when(semanticMatchService.comparePetDescription("Czarny mops", "Mops znaleziony")).thenReturn(0.90);
-
-        matchingService.processLocationMatchEvent(lostNoticeId, List.of(seenNotice));
-
-        verify(matchResultRepository, atLeastOnce()).save(any(MatchResult.class));
-        verify(matchResultProducer, times(1)).sendMatchNotification(any(MatchResult.class));
+        verify(matchResultRepository, never()).save(any(MatchResult.class));
+        verify(matchResultProducer, never()).sendMatchNotification(any(MatchResult.class));
     }
 
     @Test
     void getMatchesForNotice_ShouldReturnResultsFromRepository() {
         List<MatchResult> expectedResults = List.of(new MatchResult());
-        when(matchResultRepository.findByLostNoticeId(lostNoticeId)).thenReturn(expectedResults);
+        when(matchResultRepository.findByLostNoticeId(newNoticeId)).thenReturn(expectedResults);
 
-        List<MatchResult> actualResults = matchingService.getMatchesForNotice(lostNoticeId);
+        List<MatchResult> actualResults = matchingService.getMatchesForNotice(newNoticeId);
 
         assertEquals(expectedResults, actualResults);
     }
@@ -163,9 +155,11 @@ class MatchingServiceTest {
     @Test
     void getMatchDetail_ShouldReturnOptionalResultFromRepository() {
         MatchResult matchResult = new MatchResult();
-        when(matchResultRepository.findByLostNoticeIdAndSeenNoticeId(lostNoticeId, seenNoticeId))
+        when(matchResultRepository.findByLostNoticeIdAndSeenNoticeId(newNoticeId, candidateId))
                 .thenReturn(Optional.of(matchResult));
-        Optional<MatchResult> actualResult = matchingService.getMatchDetail(lostNoticeId, seenNoticeId);
+
+        Optional<MatchResult> actualResult = matchingService.getMatchDetail(newNoticeId, candidateId);
+
         assertTrue(actualResult.isPresent());
         assertEquals(matchResult, actualResult.get());
     }
