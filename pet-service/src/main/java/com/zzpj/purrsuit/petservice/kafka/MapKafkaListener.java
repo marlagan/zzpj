@@ -19,10 +19,6 @@ public class MapKafkaListener {
         log.info("Odebrano event! Zgłoszenie zgubienia: {}, potencjalne znalezione w okolicy: {}",
                 event.lostNoticeId(), event.foundNotices());
 
-        // Tutaj wywołujesz swoją logikę porównywania
-        // Np. pobierasz pełne dane tych zgłoszeń przez WebClient z notice-service
-        // i wysyłasz do SemanticMatchService (Groq API)
-
         try {
             // Przykładowe wywołanie Twojej metody
             matchingService.processLocationMatchEvent(event.lostNoticeId(), event.foundNotices());

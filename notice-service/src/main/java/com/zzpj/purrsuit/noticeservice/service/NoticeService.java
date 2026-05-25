@@ -122,7 +122,8 @@ public class NoticeService {
         eventProducer.sendDescriptionEvent(
                 n.getId(),
                 n.getSpecies(),
-                resolveDescription(n));
+                resolveDescription(n),
+                n.getType());
 
         // Event 2 → map-service: noticeId + typ + lokalizacja + data utworzenia
         eventProducer.sendLocationEvent(

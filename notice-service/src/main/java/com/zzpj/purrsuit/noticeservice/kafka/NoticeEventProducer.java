@@ -22,7 +22,8 @@ import java.util.UUID;
 class NoticeDescriptionEvent {
     private UUID noticeId;
     private String species;       // gatunek (np. "kot")
-    private String description;   // aiGeneratedDescription lub colorDescription
+    private String description;
+    private NoticeType type;// aiGeneratedDescription lub colorDescription
 }
 
 // Event 2: dla map-service
@@ -55,11 +56,12 @@ public class NoticeEventProducer {
      * Przekazuje noticeId, gatunek i opis — pet-service porównuje opisy
      * przez Groq LLM i szuka dopasowań (score ≥ 0.75).
      */
-    public void sendDescriptionEvent(UUID noticeId, String species, String description) {
+    public void sendDescriptionEvent(UUID noticeId, String species, String description, NoticeType type) {
         var event = NoticeDescriptionEvent.builder()
                 .noticeId(noticeId)
                 .species(species)
                 .description(description)
+                .type(type)
                 .build();
         send(TOPIC_DESCRIPTION, noticeId.toString(), event);
     }

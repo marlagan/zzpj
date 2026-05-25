@@ -15,14 +15,6 @@ import java.util.UUID;
 public class PetController {
     private final MatchingService matchingService;
 
-    @PostMapping("/match/{noticeId}")
-    public ResponseEntity<List<MatchResultDto>> findMatches(@PathVariable UUID noticeId){
-        var results = matchingService.findMatches(noticeId);
-        var dtos = results.stream()
-                .map(this::toDto)
-                .toList();
-        return ResponseEntity.ok(dtos);
-    }
 
     @GetMapping("matches/{noticeId}")
     public ResponseEntity<List<MatchResultDto>> getMatches(@PathVariable UUID noticeId){
