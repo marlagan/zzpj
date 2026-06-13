@@ -1,10 +1,10 @@
 -- 1. Tworzenie baz danych dla poszczególnych mikroserwisów
-CREATE DATABASE IF NOT EXISTS notice_db;
-CREATE DATABASE IF NOT EXISTS map_db;
-CREATE DATABASE IF NOT EXISTS pet_db;
-CREATE DATABASE IF NOT EXISTS user_db;
-CREATE DATABASE IF NOT EXISTS notification_db;
-CREATE DATABASE IF NOT EXISTS keycloak;
+CREATE DATABASE notice_db;
+CREATE DATABASE map_db;
+CREATE DATABASE pet_db;
+CREATE DATABASE user_db;
+CREATE DATABASE notification_db;
+CREATE DATABASE keycloak;
 
 -- 2. Aktywacja rozszerzenia PostGIS dla bazy NoticeService
 \c notice_db;
