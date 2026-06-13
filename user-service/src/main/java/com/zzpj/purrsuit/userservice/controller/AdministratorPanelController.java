@@ -22,20 +22,6 @@ public class AdministratorPanelController {
 
     private UserService userService;
 
-    @PostMapping
-    public ResponseEntity<String> createUser(@RequestBody UserRegistrationDTO dto) {
-
-        try {
-            userService.createUser(dto);
-            return ResponseEntity.status(HttpStatus.CREATED).build();
-
-        } catch (EmailAlreadyRegisteredException e) {
-            log.error("Create user error: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
-
-        }
-    }
-
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteUser(@PathVariable UUID id) {
         try {
@@ -115,5 +101,17 @@ public class AdministratorPanelController {
                 .body("Internal server error");
     }
     }
-
+    @GetMapping("/users/{id}/email")
+    public ResponseEntity<String> getUserEmailById(@PathVariable UUID id) {
+        try {
+            User user = userService.getUserInfo(id);
+            return ResponseEntity.ok(user.getEmail());
+        } catch (NoUserFoundException e) {
+            log.error("User not found: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            log.error("Internal server error: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal server error");
+        }
+    }
 }

@@ -28,6 +28,7 @@
         <module>pet-service</module>
         <module>user-service</module>
         <module>api-gateway-service</module>
+        <module>common-events</module>
     </modules>
 
     <dependencyManagement>

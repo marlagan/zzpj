@@ -24,45 +24,7 @@ public class AuthorizationController {
 
     private UserService userService;
 
-    @PostMapping("/login")
-    public ResponseEntity<String> login(@Valid @RequestBody UserLoginDTO userLoginDTO){
-        String token = "";
-        try {
-            token = userService.loginUser(userLoginDTO);
-        }catch (IncorrectPasswordException | EmailDoesNotExistException e){
-            log.error("Login error: ", e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
-        }
-
-        return ResponseEntity.ok(token);
-    }
-
-    @PostMapping("/register")
-    public ResponseEntity<String> register(@Valid @RequestBody UserRegistrationDTO userRegistrationDTO){
-
-        try {
-            userService.registerUser(userRegistrationDTO);
-        }catch (EmailAlreadyRegisteredException | PhoneNumberAlreadyRegisteredException e){
-            log.error("Register error: ", e.getMessage());
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
-        }
-
-        return ResponseEntity.ok("Registration was successful");
-    }
-
-    @PatchMapping("/change-password/{id}")
-    public ResponseEntity<String> changePassword(@Valid @RequestBody PasswordChangeDTO passwordChangeDTO, @PathVariable UUID id){
-
-        try {
-            userService.changePassword(id, passwordChangeDTO.getNewPassword(), passwordChangeDTO.getOldPassword());
-        }catch (EmailAlreadyRegisteredException | PhoneNumberAlreadyRegisteredException e){
-            log.error("Password change failure: ", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
-        return ResponseEntity.ok("Registration was successful");
-    }
-
-    @PostMapping("/upload/{id}")
+    @PostMapping("/upload/{id}") // todo move to profile
     public ResponseEntity<?> uploadImage(@PathVariable UUID id, @RequestParam("file") MultipartFile file) {
         try {
             String imagePath = userService.uploadUserImage(id, file);

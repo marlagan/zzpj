@@ -21,9 +21,6 @@ import java.util.UUID;
 public class User {
 
     @Id
-    // BRAK @GeneratedValue!
-    // ID użytkownika w tej bazie musi być dokładną kopią ID z Keycloaka (z tokena JWT - claim "sub").
-    // Profil jest tworzony dopiero przy pierwszym logowaniu do Waszej aplikacji.
     @Column(nullable = false, updatable = false)
     private UUID id;
 
@@ -38,10 +35,6 @@ public class User {
 
     @Pattern(regexp = "^\\+?[1-9]\\d{7,14}$", message = "Invalid phone number format")
     private String phoneNumber;
-
-    // #todo Hasłami powinien zarządzać wyłącznie Keycloak.
-    @Size(message = "min 8 characters")
-    private String password;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
