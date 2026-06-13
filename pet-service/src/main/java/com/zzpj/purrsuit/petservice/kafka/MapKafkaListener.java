@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class MapKafkaListener {
 
-    private final MatchingService matchingService; // Twój serwis z
+    private final MatchingService matchingService;
 
     @KafkaListener(topics = "nearby-notices-topic", groupId = "pet-matching-group")
     public void consumeNearbyNotices(NearbyNoticesEvent event) {
@@ -20,7 +20,7 @@ public class MapKafkaListener {
                 event.lostNoticeId(), event.nearbyFoundNoticeIds());
 
         try {
-            // Przykładowe wywołanie Twojej metody
+
             matchingService.processLocationMatchEvent(event.lostNoticeId(), event.nearbyFoundNoticeIds());
         } catch (Exception e) {
             log.error("Błąd podczas przetwarzania dopasowań dla zgłoszenia {}", event.lostNoticeId(), e);

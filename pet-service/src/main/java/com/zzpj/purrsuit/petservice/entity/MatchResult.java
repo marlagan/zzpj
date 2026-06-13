@@ -1,4 +1,4 @@
-package com.zzpj.purrsuit.petservice.model;
+package com.zzpj.purrsuit.petservice.entity;
 
 import com.zzpj.purrsuit.petservice.enums.MatchStatus;
 import jakarta.persistence.*;
@@ -23,6 +23,9 @@ public class MatchResult {
 
     @Column(nullable = false)
     private UUID seenNoticeId;
+
+    @Column(nullable = false)
+    private UUID lostOwnerId;
 
     @Column(nullable = false)
     private double similarityScore;

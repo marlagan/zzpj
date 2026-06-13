@@ -19,8 +19,8 @@ public class NoticeKafkaListener {
             groupId = "pet-notice-group"
     )
     public void consumeNewNotice(NoticeCreatedEvent event) {
-        log.info("Odebrano w czasie rzeczywistym nowe ogłoszenie z notice-service! ID: {}, Gatunek: {}, Typ: {}, Opis: {}",
-                event.noticeId(), event.species(), event.type(), event.description());
+        log.info("Odebrano nowe ogłoszenie z notice-service! Użytkownik:{}, ID: {}, Gatunek: {}, Typ: {}, Opis: {}",
+                event.userId(), event.noticeId(), event.species(), event.type(), event.description());
         try {
             matchingService.handleIncomingNotice(event);
         } catch (Exception e) {

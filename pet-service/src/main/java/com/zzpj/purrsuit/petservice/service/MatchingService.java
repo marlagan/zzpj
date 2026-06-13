@@ -2,7 +2,7 @@ package com.zzpj.purrsuit.petservice.service;
 import com.zzpj.purrsuit.common.events.NoticeCreatedEvent;
 import com.zzpj.purrsuit.petservice.entity.PetNotice;
 import com.zzpj.purrsuit.petservice.kafka.MatchResultProducer;
-import com.zzpj.purrsuit.petservice.model.MatchResult;
+import com.zzpj.purrsuit.petservice.entity.MatchResult;
 import com.zzpj.purrsuit.petservice.enums.MatchStatus;
 import com.zzpj.purrsuit.petservice.repository.MatchResultRepository;
 import com.zzpj.purrsuit.petservice.repository.PetNoticeRepository;
@@ -34,6 +34,7 @@ public class MatchingService {
         PetNotice newNotice = PetNotice.builder()
                 .noticeId(event.noticeId())
                 .type(event.type())
+                .userId(event.userId())
                 .species(event.species())
                 .description(event.description())
                 .build();
@@ -62,10 +63,12 @@ public class MatchingService {
                 boolean isNewLost = newNotice.getType().equalsIgnoreCase("LOST");
                 UUID lostId = isNewLost ? newNotice.getNoticeId() : candidate.getNoticeId();
                 UUID foundId = isNewLost ? candidate.getNoticeId() : newNotice.getNoticeId();
+                UUID lostOwnerId = isNewLost ? newNotice.getUserId() : candidate.getUserId();
 
                 MatchResult result = MatchResult.builder()
                         .lostNoticeId(lostId)
                         .seenNoticeId(foundId)
+                        .lostOwnerId(lostOwnerId)
                         .similarityScore(score)
                         .status(MatchStatus.PENDING)
                         .build();

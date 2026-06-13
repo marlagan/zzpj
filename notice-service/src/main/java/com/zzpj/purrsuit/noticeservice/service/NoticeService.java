@@ -121,6 +121,7 @@ public class NoticeService {
         // Event 1 → pet-service: noticeId + gatunek + opis
         eventProducer.sendDescriptionEvent(
                 n.getId(),
+                n.getReportedByUserId(),
                 n.getSpecies(),
                 resolveDescription(n),
                 n.getType());
