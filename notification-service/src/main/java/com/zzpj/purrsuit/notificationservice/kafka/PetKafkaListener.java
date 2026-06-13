@@ -1,7 +1,7 @@
 package com.zzpj.purrsuit.notificationservice.kafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.zzpj.purrsuit.notificationservice.dto.MatchResultEvent;
+import com.zzpj.purrsuit.common.events.MatchResultEvent;
 import com.zzpj.purrsuit.notificationservice.dto.PetNotificationDTO;
 import com.zzpj.purrsuit.notificationservice.entity.Notification;
 import com.zzpj.purrsuit.notificationservice.enums.NotificationChannel;

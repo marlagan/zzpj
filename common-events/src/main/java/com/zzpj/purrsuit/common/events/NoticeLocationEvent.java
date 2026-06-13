@@ -1,4 +1,4 @@
-package com.zzpj.purrsuit.mapservice.dto; // lub mapservice.dto w drugim serwisie
+package com.zzpj.purrsuit.common.events;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

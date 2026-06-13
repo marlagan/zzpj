@@ -1,4 +1,4 @@
-package com.zzpj.purrsuit.petservice.event;
+package com.zzpj.purrsuit.common.events;
 
 import java.util.UUID;
 

@@ -1,6 +1,8 @@
 package com.zzpj.purrsuit.noticeservice.kafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.zzpj.purrsuit.common.events.NoticeCreatedEvent;
+import com.zzpj.purrsuit.common.events.NoticeLocationEvent;
 import com.zzpj.purrsuit.noticeservice.domain.NoticeType;
 import lombok.Builder;
 import lombok.Data;
@@ -17,28 +19,9 @@ import java.util.UUID;
 // Temat: "notice-activated"
 // Konsument: pet-service — szuka dopasowań na podstawie gatunku i opisu (Groq LLM)
 
-@Data
-@Builder
-class NoticeDescriptionEvent {
-    private UUID noticeId;
-    private String species;       // gatunek (np. "kot")
-    private String description;
-    private NoticeType type;// aiGeneratedDescription lub colorDescription
-}
-
 // Event 2: dla map-service
 // Temat: "notice-location"
 // Konsument: map-service — rejestruje lokalizację, szuka ogłoszeń w promieniu
-
-@Data
-@Builder
-class NoticeLocationEvent {
-    private UUID noticeId;
-    private NoticeType noticeType;   // LOST | FOUND
-    private double latitude;         // z Point.getY()
-    private double longitude;        // z Point.getX()
-    private LocalDateTime createdAt;
-}
 
 @Slf4j
 @Component
@@ -48,8 +31,8 @@ public class NoticeEventProducer {
     static final String TOPIC_DESCRIPTION = "notice-activated";
     static final String TOPIC_LOCATION    = "notice-location-topic";
 
-    private final KafkaTemplate<String, String> kafkaTemplate;
-    private final ObjectMapper objectMapper;
+    private final KafkaTemplate<String, NoticeLocationEvent> kafkaMapTemplate;
+    private final KafkaTemplate<String, NoticeCreatedEvent> kafkaDescriptionTemplate;
 
     /**
      * Event 1 → pet-service
@@ -57,13 +40,13 @@ public class NoticeEventProducer {
      * przez Groq LLM i szuka dopasowań (score ≥ 0.75).
      */
     public void sendDescriptionEvent(UUID noticeId, String species, String description, NoticeType type) {
-        var event = NoticeDescriptionEvent.builder()
-                .noticeId(noticeId)
-                .species(species)
-                .description(description)
-                .type(type)
-                .build();
-        send(TOPIC_DESCRIPTION, noticeId.toString(), event);
+        try {
+            var event = new NoticeCreatedEvent(noticeId, species, description, type.toString());
+            kafkaDescriptionTemplate.send(TOPIC_DESCRIPTION, noticeId.toString(), event);
+            log.info("Kafka [{}] key={}", TOPIC_DESCRIPTION, noticeId);
+        } catch (Exception e) {
+            log.error("Failed to publish to Kafka topic={} key={}", TOPIC_DESCRIPTION, noticeId, e);
+        }
     }
 
     /**
@@ -74,23 +57,16 @@ public class NoticeEventProducer {
      */
     public void sendLocationEvent(UUID noticeId, NoticeType noticeType,
                                   Point location, LocalDateTime createdAt) {
-        var event = NoticeLocationEvent.builder()
-                .noticeId(noticeId)
-                .noticeType(noticeType)
-                .latitude(location.getY())
-                .longitude(location.getX())
-                .createdAt(createdAt)
-                .build();
-        send(TOPIC_LOCATION, noticeId.toString(), event);
+        try {
+            var event = new NoticeLocationEvent(noticeId, noticeType.toString(), location.getY(), location.getX(), createdAt);
+            kafkaMapTemplate.send(TOPIC_LOCATION, noticeId.toString(), event);
+            log.info("Kafka [{}] key={}", TOPIC_LOCATION, noticeId);
+        } catch (Exception e) {
+            log.error("Failed to publish to Kafka topic={} key={}", TOPIC_LOCATION, noticeId, e);
+        }
     }
 
     private void send(String topic, String key, Object payload) {
-        try {
-            String json = objectMapper.writeValueAsString(payload);
-            kafkaTemplate.send(topic, key, json);
-            log.info("Kafka [{}] key={}", topic, key);
-        } catch (Exception e) {
-            log.error("Failed to publish to Kafka topic={} key={}", topic, key, e);
-        }
+
     }
 }

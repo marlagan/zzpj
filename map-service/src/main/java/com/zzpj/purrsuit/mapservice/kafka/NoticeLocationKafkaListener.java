@@ -1,6 +1,6 @@
 package com.zzpj.purrsuit.mapservice.kafka;
 
-import com.zzpj.purrsuit.mapservice.dto.NoticeLocationEvent;
+import com.zzpj.purrsuit.common.events.NoticeLocationEvent;
 import com.zzpj.purrsuit.mapservice.service.LocationMatchingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

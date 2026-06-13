@@ -1,6 +1,6 @@
 package com.zzpj.purrsuit.petservice.kafka;
 
-import com.zzpj.purrsuit.petservice.event.NoticeCreatedEvent;
+import com.zzpj.purrsuit.common.events.NoticeCreatedEvent;
 import com.zzpj.purrsuit.petservice.service.MatchingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,8 +19,8 @@ public class NoticeKafkaListener {
             groupId = "pet-notice-group"
     )
     public void consumeNewNotice(NoticeCreatedEvent event) {
-        log.info("Odebrano w czasie rzeczywistym nowe ogłoszenie z notice-service! ID: {}, Gatunek: {}, Typ: {}",
-                event.noticeId(), event.species(), event.type());
+        log.info("Odebrano w czasie rzeczywistym nowe ogłoszenie z notice-service! ID: {}, Gatunek: {}, Typ: {}, Opis: {}",
+                event.noticeId(), event.species(), event.type(), event.description());
         try {
             matchingService.handleIncomingNotice(event);
         } catch (Exception e) {

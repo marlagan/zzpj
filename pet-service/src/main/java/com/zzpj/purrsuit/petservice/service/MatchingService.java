@@ -1,6 +1,6 @@
 package com.zzpj.purrsuit.petservice.service;
+import com.zzpj.purrsuit.common.events.NoticeCreatedEvent;
 import com.zzpj.purrsuit.petservice.entity.PetNotice;
-import com.zzpj.purrsuit.petservice.event.NoticeCreatedEvent;
 import com.zzpj.purrsuit.petservice.kafka.MatchResultProducer;
 import com.zzpj.purrsuit.petservice.model.MatchResult;
 import com.zzpj.purrsuit.petservice.enums.MatchStatus;
