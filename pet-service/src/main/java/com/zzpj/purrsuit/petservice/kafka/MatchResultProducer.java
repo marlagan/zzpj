@@ -1,7 +1,7 @@
 package com.zzpj.purrsuit.petservice.kafka;
 
 import com.zzpj.purrsuit.common.events.MatchResultEvent;
-import com.zzpj.purrsuit.petservice.model.MatchResult;
+import com.zzpj.purrsuit.petservice.entity.MatchResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -18,6 +18,7 @@ public class MatchResultProducer {
         MatchResultEvent event = new MatchResultEvent(
                 result.getLostNoticeId(),
                 result.getSeenNoticeId(),
+                result.getLostOwnerId(),
                 result.getSimilarityScore()
         );
         log.info("Publishing match result to Kafka topic '{}' for Lost: {}, Seen: {}",

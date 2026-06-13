@@ -4,7 +4,7 @@ import com.zzpj.purrsuit.common.events.NoticeCreatedEvent;
 import com.zzpj.purrsuit.petservice.entity.PetNotice;
 import com.zzpj.purrsuit.petservice.enums.MatchStatus;
 import com.zzpj.purrsuit.petservice.kafka.MatchResultProducer;
-import com.zzpj.purrsuit.petservice.model.MatchResult;
+import com.zzpj.purrsuit.petservice.entity.MatchResult;
 import com.zzpj.purrsuit.petservice.repository.MatchResultRepository;
 import com.zzpj.purrsuit.petservice.repository.PetNoticeRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,6 +49,8 @@ class MatchingServiceTest {
 
     private final UUID newNoticeId = UUID.randomUUID();
     private final UUID candidateId = UUID.randomUUID();
+    private final UUID userID = UUID.randomUUID();
+
 
     @BeforeEach
     void setUp() {
@@ -60,11 +62,12 @@ class MatchingServiceTest {
     @Test
     void handleIncomingNotice_ShouldSaveLocallyAndFindMatch_WhenScoreIsAboveThreshold() {
         NoticeCreatedEvent event = new NoticeCreatedEvent(
-                newNoticeId, "Dog", "Czarny mops", "LOST"
+                newNoticeId, userID,"Dog", "Czarny mops", "LOST"
         );
 
         PetNotice candidate = PetNotice.builder()
                 .noticeId(candidateId)
+                .userId(userID)
                 .type("FOUND")
                 .species("Dog")
                 .description("Czarny pies mops")
@@ -98,11 +101,12 @@ class MatchingServiceTest {
     @Test
     void handleIncomingNotice_ShouldNotPublishMatch_WhenScoreIsBelowThreshold() {
         NoticeCreatedEvent event = new NoticeCreatedEvent(
-                newNoticeId, "Dog", "Czarny mops", "LOST"
+                newNoticeId, userID, "Dog", "Czarny mops", "LOST"
         );
 
         PetNotice candidate = PetNotice.builder()
                 .noticeId(candidateId)
+                .userId(userID)
                 .type("FOUND")
                 .species("Dog")
                 .description("Biały owczarek")
@@ -126,7 +130,7 @@ class MatchingServiceTest {
     @Test
     void handleIncomingNotice_ShouldStopProcessing_WhenNoCandidatesFound() {
         NoticeCreatedEvent event = new NoticeCreatedEvent(
-                newNoticeId, "Cat", "Biały kot", "FOUND"
+                newNoticeId, userID, "Cat", "Biały kot", "FOUND"
         );
 
         when(petNoticeRepository.findByTypeAndSpecies("LOST", "Cat"))

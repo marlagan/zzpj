@@ -18,6 +18,7 @@ public class PetNotice {
     @Id
     private UUID noticeId;
 
+    private UUID userId;
     private String type;    // np. "LOST" lub "FOUND"
     private String species; // np. "kot"
 

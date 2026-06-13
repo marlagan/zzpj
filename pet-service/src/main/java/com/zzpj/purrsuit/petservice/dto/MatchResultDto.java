@@ -8,6 +8,7 @@ public record MatchResultDto(
         UUID id,
         UUID lostNoticeId,
         UUID seenNoticeId,
+        UUID lostOwnerId,
         double similarityScore,
         MatchStatus status,
         LocalDateTime createdAt

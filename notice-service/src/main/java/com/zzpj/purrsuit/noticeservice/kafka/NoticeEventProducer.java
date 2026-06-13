@@ -39,9 +39,9 @@ public class NoticeEventProducer {
      * Przekazuje noticeId, gatunek i opis — pet-service porównuje opisy
      * przez Groq LLM i szuka dopasowań (score ≥ 0.75).
      */
-    public void sendDescriptionEvent(UUID noticeId, String species, String description, NoticeType type) {
+    public void sendDescriptionEvent(UUID noticeId, UUID reportedByUserId,String species, String description, NoticeType type) {
         try {
-            var event = new NoticeCreatedEvent(noticeId, species, description, type.toString());
+            var event = new NoticeCreatedEvent(noticeId, reportedByUserId, species, description, type.toString());
             kafkaDescriptionTemplate.send(TOPIC_DESCRIPTION, noticeId.toString(), event);
             log.info("Kafka [{}] key={}", TOPIC_DESCRIPTION, noticeId);
         } catch (Exception e) {

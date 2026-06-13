@@ -1,7 +1,7 @@
 package com.zzpj.purrsuit.petservice.controller;
 
 import com.zzpj.purrsuit.petservice.dto.MatchResultDto;
-import com.zzpj.purrsuit.petservice.model.MatchResult;
+import com.zzpj.purrsuit.petservice.entity.MatchResult;
 import com.zzpj.purrsuit.petservice.service.MatchingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +39,7 @@ public class PetController {
                 result.getId(),
                 result.getLostNoticeId(),
                 result.getSeenNoticeId(),
+                result.getLostOwnerId(),
                 result.getSimilarityScore(),
                 result.getStatus(),
                 result.getCreatedAt());
