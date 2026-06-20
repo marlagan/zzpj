@@ -120,7 +120,7 @@ export default function AdminPage() {
         fetchUsers();
     }, []);
 
-    const deleteUser = async (id: number) => {
+    const deleteUser = async (id: string) => {
         if (!window.confirm("ARE YOU SURE YOU WANT TO DELETE THIS USER?")) {
             return;
         }
@@ -135,7 +135,7 @@ export default function AdminPage() {
         }
     };
 
-    const toggleRole = async (id: number) => {
+    const toggleRole = async (id: string) => {
         const user = users.find(u => u.id === id);
         if (!user) return;
 

@@ -9,6 +9,7 @@ import ContactPage from "./pages/ContactPage.tsx";
 import AboutWebsite from "./pages/AboutWebsite.tsx";
 import ProfilePage from "./pages/ProfilePage.tsx";
 import AdminPage from "./pages/AdminPage.tsx";
+import ProtectedRoute from "./components/ProtectedRoute.tsx";
 
 function App() {
     return (
@@ -20,8 +21,16 @@ function App() {
                 <Route path="/register" element={<RegisterPage/>} />
                 <Route path="/contact" element={<ContactPage/>} />
                 <Route path="/about-website" element={<AboutWebsite/>} />
-                <Route path="/admin" element={<AdminPage/>} />
-                <Route path="/profile" element={<ProfilePage/>} />
+                <Route path="/admin" element={
+                    <ProtectedRoute requireAdmin>
+                        <AdminPage/>
+                    </ProtectedRoute>
+                } />
+                <Route path="/profile" element={
+                    <ProtectedRoute>
+                        <ProfilePage/>
+                    </ProtectedRoute>
+                } />
             </Routes>
         <Footer/>
         </>

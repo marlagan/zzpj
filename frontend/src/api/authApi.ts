@@ -1,131 +1,59 @@
-import type { UserRegistrationDTO, UserLoginDTO } from "../types/auth";
+import { KEYCLOAK_CLIENT_ID, KEYCLOAK_REALM, KEYCLOAK_URL } from "../config";
+import type { User, UserLoginDTO, UserRegistrationDTO } from "../types/auth";
+import { apiFetch, setToken, storeUser } from "./apiClient";
 
-const BASE_URL = "http://localhost:8086";
-
-export const register = async (data: UserRegistrationDTO) => {
-    const response = await fetch(`${BASE_URL}/register`, {
-        method: "POST", 
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
+export async function login(data: UserLoginDTO): Promise<string> {
+    const body = new URLSearchParams({
+        grant_type: "password",
+        client_id: KEYCLOAK_CLIENT_ID,
+        username: data.email,
+        password: data.password,
     });
 
-    if (!response.ok) {
-        throw new Error(await response.text());
-    }
-
-    return await response.text();
-};
-
-export const login = async (data: UserLoginDTO) => {
-    const response = await fetch(`${BASE_URL}/login`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-    });
+    const response = await fetch(
+        `${KEYCLOAK_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/token`,
+        {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body,
+        }
+    );
 
     if (!response.ok) {
-        throw new Error(await response.text());
+        throw new Error("Invalid email or password");
     }
 
-    const token = await response.text();
+    const tokenData = await response.json();
+    const token = tokenData.access_token as string;
+    setToken(token);
+
+    const user = await apiFetch<User>("/api/users/sync-profile", { method: "POST" });
+    storeUser(user);
+
     return token;
-};
+}
 
-export const deleteUserById = async (id: number) => {
-    const response = await fetch(`${BASE_URL}/${id}`, {
-        method: "DELETE",
-    });
-
-    if (!response.ok) {
-        throw new Error(await response.text());
-    }
-
-    return true;
-};
-
-
-export const getUserByEmail = async (email: string) => {
-    const response = await fetch(`${BASE_URL}/users/email/${email}`, {
-        method: "GET",
-    });
-
-    if (!response.ok) {
-        throw new Error(await response.text());
-    }
-
-    return await response.json();
-};
-
-export const getAllUsers = async () => {
-    const response = await fetch(`${BASE_URL}/get-all-users`, {
-        method: "GET",
-    });
-
-    if (!response.ok) {
-        throw new Error(await response.text());
-    }
-
-    return await response.json();
-};
-
-
-export const changeRoleById = async (id: number, roleName: string) => {
-    const response = await fetch(`${BASE_URL}/${id}/role?role=${roleName}`, {
-        method: "PATCH",
-    });
-
-    if (!response.ok) {
-        throw new Error(await response.text());
-    }
-
-    return true;
-};
-
-
-export const changePassword = async (id: number, oldPassword: string, newPassword: string) => {
-    const response = await fetch(`${BASE_URL}/change-password/${id}`, {
-        method: "PATCH",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            oldPassword,
-            newPassword,
-        }),
-    });
-
-    if (!response.ok) {
-        throw new Error(await response.text());
-    }
-    return await response.text();
-};
-
-export const uploadUserImage = async (id: number, file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const response = await fetch(`${BASE_URL}/upload/${id}`, {
+export async function register(data: UserRegistrationDTO): Promise<string> {
+    await apiFetch<string>("/api/users/public/register", {
         method: "POST",
-        body: formData,
+        body: JSON.stringify(data),
     });
 
-    if (!response.ok) {
-        throw new Error(await response.text());
-    }
+    return login({ email: data.email, password: data.password });
+}
 
-    return await response.text();
-};
+export const getAllUsers = () => apiFetch<User[]>("/api/users/get-all-users");
 
-export const getUserInfo = async (id: number) => {
-    const response = await fetch(`${BASE_URL}/users/${id}`);
+export const deleteUserById = (id: string) =>
+    apiFetch<string>(`/api/users/${id}`, { method: "DELETE" });
 
-    if (!response.ok) {
-        throw new Error(await response.text());
-    }
+export const changeRoleById = (id: string, roleName: string) =>
+    apiFetch<string>(`/api/users/${id}/role?role=${roleName}`, { method: "PATCH" });
 
-    return await response.json();
-};
+export const getUserInfo = (id: string) => apiFetch<User>(`/api/users/users/${id}`);
+
+export const changePassword = (oldPassword: string, newPassword: string) =>
+    apiFetch<string>("/api/users/profile/change-password", {
+        method: "POST",
+        body: JSON.stringify({ oldPassword, newPassword }),
+    });
