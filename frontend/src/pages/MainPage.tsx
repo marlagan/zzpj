@@ -3,7 +3,7 @@ import {Link} from "react-router-dom";
 
 const styles: Record<string, React.CSSProperties> = {
     page: {
-        height: "100vh",
+        minHeight: "100%",
         display: "flex",
         flexDirection: "column",
         background: "#ffffff",
@@ -99,10 +99,10 @@ export default function MainPage() {
                             <button style={styles.button}>GO</button>
                         </Link>
                             ):(
-                                <>
+                                <Link to="/notices/create/LOST" style={{ textDecoration: "none", color: "inherit" }}>
                                 <p style={styles.sectionText}>REPORT A MISSING<br/>CAT/DOG</p>
                                  <button style={styles.button}>GO</button>
-                                </>
+                                </Link>
                             )}
                     </div>
 
@@ -113,10 +113,10 @@ export default function MainPage() {
                             <button style={styles.button}>HELP</button>
                         </Link>
                             ):(
-                                <>
+                                <Link to="/map" style={{ textDecoration: "none", color: "inherit" }}>
                                     <p style={styles.sectionText}>SAW A STRAY<br/>CAT/DOG?</p>
                                     <button style={styles.button}>HELP</button>
-                                </>
+                                </Link>
                             )}
                     </div>
 

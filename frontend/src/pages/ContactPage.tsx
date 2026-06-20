@@ -3,7 +3,7 @@ import catGif from "../assets/cat4Gif.gif";
 
 const styles: Record<string, React.CSSProperties> = {
     page: {
-        height: "100vh",
+        minHeight: "100%",
         display: "flex",
         flexDirection: "column",
         background: "#ffffff",

@@ -8,6 +8,7 @@ const styles: Record<string, React.CSSProperties> = {
         padding: "16px",
         backgroundColor: "#9BA3A8",
         borderBottom: "1px solid #ddd",
+        flexShrink: 0,
     },
     links: {
         display: "flex",
@@ -17,9 +18,8 @@ const styles: Record<string, React.CSSProperties> = {
     link: {
         textDecoration: "none",
         color: "black",
-        fontFamily: "TIm"
+        fontFamily: '"Pixelify Sans", sans-serif',
     },
-
 };
 
 export default function Footer() {

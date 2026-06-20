@@ -6,7 +6,7 @@ import PopUp from "../components/PopUp.tsx";
 
 const styles: Record<string, React.CSSProperties> = {
     page: {
-        height: "100vh",
+        minHeight: "100%",
         display: "flex",
         flexDirection: "column",
         background: "#ffffff",

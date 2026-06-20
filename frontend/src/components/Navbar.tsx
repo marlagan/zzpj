@@ -10,6 +10,7 @@ const styles: Record<string, React.CSSProperties> = {
         padding: "16px",
         backgroundColor: "#9BA3A8",
         borderBottom: "1px solid #ddd",
+        flexShrink: 0,
     },
     links: {
         display: "flex",
@@ -46,6 +47,7 @@ export default function Navbar() {
                     </>
                 ) : (
                     <>
+                        <Link to="/map" style={styles.link}>Map</Link>
                         <Link to="/profile" style={styles.link}>Profile</Link>
                         {user?.roleName === "ADMIN" && (
                             <Link to="/admin" style={styles.link}>Admin</Link>
