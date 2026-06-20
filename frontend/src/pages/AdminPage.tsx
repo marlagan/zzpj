@@ -6,7 +6,7 @@ import type {User} from "../types/auth.ts";
 
 const styles: Record<string, React.CSSProperties> = {
     page: {
-        minHeight: "100vh",
+        flex: 1,
         display: "flex",
         flexDirection: "column",
         background: "#ffffff",

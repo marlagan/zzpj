@@ -1,4 +1,5 @@
-import { Routes, Route} from "react-router-dom";
+import React from "react";
+import { Routes, Route, useLocation } from "react-router-dom";
 import Login from "./pages/LoginPage";
 
 import MainPage from "./pages/MainPage.tsx";
@@ -10,11 +11,30 @@ import AboutWebsite from "./pages/AboutWebsite.tsx";
 import ProfilePage from "./pages/ProfilePage.tsx";
 import AdminPage from "./pages/AdminPage.tsx";
 import ProtectedRoute from "./components/ProtectedRoute.tsx";
+import CreateNoticePage from "./pages/CreateNoticePage.tsx";
+import NoticeDetailPage from "./pages/NoticeDetailPage.tsx";
+import NoticesListPage from "./pages/NoticesListPage.tsx";
+import MapPage from "./pages/MapPage.tsx";
 
 function App() {
+    const location = useLocation();
+    const isMapPage = location.pathname === "/map";
+
+    const contentAreaStyle: React.CSSProperties = {
+        flex: 1,
+        minHeight: 0,
+        overflowY: isMapPage ? "hidden" : "auto",
+        overflowX: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        width: "100%",
+        alignSelf: "stretch",
+    };
+
     return (
         <>
         <Navbar/>
+        <div style={contentAreaStyle}>
             <Routes>
                 <Route path="/" element={<MainPage/>} />
                 <Route path="/login" element={<Login/>} />
@@ -31,7 +51,28 @@ function App() {
                         <ProfilePage/>
                     </ProtectedRoute>
                 } />
+                <Route path="/map" element={
+                    <ProtectedRoute>
+                        <MapPage/>
+                    </ProtectedRoute>
+                } />
+                <Route path="/notices" element={
+                    <ProtectedRoute>
+                        <NoticesListPage/>
+                    </ProtectedRoute>
+                } />
+                <Route path="/notices/create/:type" element={
+                    <ProtectedRoute>
+                        <CreateNoticePage/>
+                    </ProtectedRoute>
+                } />
+                <Route path="/notices/:id" element={
+                    <ProtectedRoute>
+                        <NoticeDetailPage/>
+                    </ProtectedRoute>
+                } />
             </Routes>
+        </div>
         <Footer/>
         </>
     );
