@@ -2,6 +2,7 @@ package com.zzpj.purssuit.apigateway.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
@@ -14,10 +15,13 @@ public class SecurityConfig {
     @Bean
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
         return http.csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .cors(Customizer.withDefaults())
                 .authorizeExchange(ex -> ex
-                        .pathMatchers("/eureka/**").permitAll() // Pozwalamy na komunikację z Eureką
-                        .pathMatchers("/public/**").permitAll() // Ewentualne publiczne endpointy
-                        .anyExchange().authenticated() // Cała reszta wymaga tokenu JWT!
+                        .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .pathMatchers("/eureka/**").permitAll()
+                        .pathMatchers("/public/**").permitAll()
+                        .pathMatchers("/api/users/public/**").permitAll()
+                        .anyExchange().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
                 .build();

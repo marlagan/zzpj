@@ -1,4 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
+import { clearAuth, getStoredUser } from "../api/apiClient";
+import type { User } from "../types/auth";
 
 const styles: Record<string, React.CSSProperties> = {
     nav: {
@@ -18,22 +20,21 @@ const styles: Record<string, React.CSSProperties> = {
         textDecoration: "none",
         color: "black",
     },
-
 };
 
 export default function Navbar() {
     const token = localStorage.getItem("token");
+    const user = getStoredUser<User>();
     const location = useLocation();
 
     const handleLogout = () => {
-        localStorage.removeItem("token");
+        clearAuth();
         window.location.href = "/";
     };
 
     return (
         <nav style={styles.nav}>
             <div style={styles.links}>
-
                 {location.pathname !== "/" && (
                     <Link to="/" style={styles.link}>Home</Link>
                 )}
@@ -46,7 +47,9 @@ export default function Navbar() {
                 ) : (
                     <>
                         <Link to="/profile" style={styles.link}>Profile</Link>
-                        <Link to="/admin" style={styles.link}>Admin</Link>
+                        {user?.roleName === "ADMIN" && (
+                            <Link to="/admin" style={styles.link}>Admin</Link>
+                        )}
                         <Link to="/" onClick={handleLogout} style={styles.link}>Logout</Link>
                     </>
                 )}

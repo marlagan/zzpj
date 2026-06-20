@@ -82,8 +82,7 @@ export default function Login() {
         setError("");
 
         try {
-            const token = await login({ email, password });
-            localStorage.setItem("token", token);
+            await login({ email, password });
             window.location.href = "/";
         } catch (err: unknown) {
             if (err instanceof Error) {
