@@ -1,10 +1,10 @@
 package com.zzpj.purrsuit.userservice.service;
 
-import com.zzpj.purrsuit.userservice.dto.UserLoginDTO;
 import com.zzpj.purrsuit.userservice.dto.UserRegistrationDTO;
 import com.zzpj.purrsuit.userservice.entity.User;
 import com.zzpj.purrsuit.userservice.enums.RoleName;
 import com.zzpj.purrsuit.userservice.exceptions.*;
+import com.zzpj.purrsuit.userservice.kafka.UserProfileKafkaProducer;
 import com.zzpj.purrsuit.userservice.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -23,6 +23,7 @@ public class UserService {
     private UserRepository userRepository;
     private final MessageSource messageSource;
     private final PasswordEncoder passwordEncoder;
+    private final UserProfileKafkaProducer userProfileKafkaProducer;
 
     public User getUserInfo(UUID id) {
         return userRepository.findById(id)
@@ -80,7 +81,9 @@ public class UserService {
             if (dto.getRoleName() != null) {
                 user.setRoleName(dto.getRoleName());
             }
-            return userRepository.save(user);
+            User saved = userRepository.save(user);
+            userProfileKafkaProducer.sendUserProfile(saved);
+            return saved;
         } else {
             User newUser = new User();
             newUser.setId(dto.getId());
@@ -89,7 +92,9 @@ public class UserService {
             newUser.setLastName(dto.getLastName());
             newUser.setPhoneNumber(dto.getPhoneNumber());
             newUser.setRoleName(dto.getRoleName() != null ? dto.getRoleName() : RoleName.USER);
-            return userRepository.save(newUser);
+            User saved = userRepository.save(newUser);
+            userProfileKafkaProducer.sendUserProfile(saved);
+            return saved;
         }
     }
 

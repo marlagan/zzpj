@@ -118,11 +118,12 @@ services:
         MODULE_NAME: user-service
     container_name: user-service
     ports:
-      - "8084:8084"
+      - "8086:8086"
     environment:
       - WAIT_FOR_DB=postgres-db
       - WAIT_FOR_CONFIG=cloud-config-service
       - WAIT_FOR_EUREKA=eureka-config-service
+      - WAIT_FOR_KAFKA=kafka
       - SPRING_CONFIG_IMPORT=optional:configserver:http://cloud-config-service:8888
       - "eureka.client.serviceUrl.defaultZone=http://eureka-config-service:8761/eureka/"
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/user_db
@@ -220,7 +221,7 @@ services:
         MODULE_NAME: notification-service
     container_name: notification-service
     ports:
-      - "8086:8086"
+      - "8084:8084"
     environment:
       - WAIT_FOR_DB=postgres-db
       - WAIT_FOR_CONFIG=cloud-config-service
