@@ -1,5 +1,5 @@
 server:
-  port: 8084
+  port: 8086
 
 keycloak:
   server-url: http://keycloak:8080
@@ -14,7 +14,6 @@ spring:
     username: admin
     password: admin
     driver-class-name: org.postgresql.Driver
-
   jpa:
     hibernate:
       ddl-auto: update
@@ -22,3 +21,8 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  kafka:
+    bootstrap-servers: kafka:29092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
