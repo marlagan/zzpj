@@ -11,13 +11,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -71,43 +65,6 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public String uploadUserImage(UUID id, MultipartFile file) {
-
-        User user = getUserInfo(id);
-
-        if (file.isEmpty()) {
-            throw new IllegalArgumentException(messageSource.getMessage("error.file.empty",
-                            null, LocaleContextHolder.getLocale())
-            );
-        }
-
-        try {
-            String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-
-            Path uploadPath = Paths.get("uploads");
-
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
-
-            Path filePath = uploadPath.resolve(fileName);
-
-            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-            String imageUrl = "/uploads/" + fileName;
-
-            user.setImage(imageUrl);
-            userRepository.save(user);
-
-            return imageUrl;
-
-        } catch (IOException e) {
-            throw new FileStorageException(messageSource.getMessage(
-                    "error.file.upload.failed", null, LocaleContextHolder.getLocale())
-            );
-        }
-    }
-
     public User registerOrUpdateUser(UserRegistrationDTO dto) {
         Optional<User> existingUser = userRepository.findById(dto.getId());
 
@@ -117,19 +74,21 @@ public class UserService {
             user.setFirstName(dto.getFirstName());
             user.setLastName(dto.getLastName());
             user.setEmail(dto.getEmail());
+            if (dto.getPhoneNumber() != null && !dto.getPhoneNumber().isBlank()) {
+                user.setPhoneNumber(dto.getPhoneNumber());
+            }
+            if (dto.getRoleName() != null) {
+                user.setRoleName(dto.getRoleName());
+            }
             return userRepository.save(user);
         } else {
-            // Create a new user since they don't exist yet
             User newUser = new User();
-            newUser.setId(dto.getId()); // Use Keycloak ID as the internal ID
+            newUser.setId(dto.getId());
             newUser.setEmail(dto.getEmail());
             newUser.setFirstName(dto.getFirstName());
             newUser.setLastName(dto.getLastName());
-            newUser.setRoleName(RoleName.USER);
-
-            // Note: Password and phone number are likely not provided by Keycloak during sync
-            // You might want to handle them accordingly or leave them empty
-
+            newUser.setPhoneNumber(dto.getPhoneNumber());
+            newUser.setRoleName(dto.getRoleName() != null ? dto.getRoleName() : RoleName.USER);
             return userRepository.save(newUser);
         }
     }

@@ -1,5 +1,12 @@
 server:
-  port: 8086
+  port: 8084
+
+keycloak:
+  server-url: http://keycloak:8080
+  realm: purrsuit-realm
+  admin-username: admin
+  admin-password: admin
+  client-id: purrsuit-client
 
 spring:
   datasource:
@@ -15,14 +22,3 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-
-  kafka:
-    bootstrap-servers: kafka:29092
-    consumer:
-      group-id: purrsuit-group
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer

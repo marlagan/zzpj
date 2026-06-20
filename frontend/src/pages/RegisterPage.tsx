@@ -128,7 +128,7 @@ export default function RegisterPage() {
                         <input type="phoneNumber"
                                value={phoneNumber}
                                onChange={(e) => setPhoneNumber(e.target.value)}
-                               style={styles.input} required placeholder="123-456-789" />
+                               style={styles.input} required placeholder="123456789" />
                     </div>
 
 

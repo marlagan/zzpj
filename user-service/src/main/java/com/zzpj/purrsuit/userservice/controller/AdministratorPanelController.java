@@ -17,7 +17,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Slf4j
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
+@RequestMapping("/api/users")
 public class AdministratorPanelController {
 
     private UserService userService;

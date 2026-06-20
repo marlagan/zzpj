@@ -1,5 +1,6 @@
 package com.zzpj.purrsuit.userservice.dto;
 
+import com.zzpj.purrsuit.userservice.enums.RoleName;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -26,5 +27,7 @@ public class UserRegistrationDTO {
 
     @Size(min = 8, message = "Password must have 8 characters")
     private String password;
+
+    private RoleName roleName;
 
 }

@@ -8,15 +8,15 @@ export type UserRegistrationDTO = {
 
 export type UserLoginDTO = {
     email: string;
-    password: string
-}
+    password: string;
+};
 
 export type User = {
-    id: number;
+    id: string;
     firstName: string;
     lastName: string;
     email: string;
-    phoneNumber: string;
+    phoneNumber?: string;
     roleName: "ADMIN" | "USER";
+    image?: string;
 };
-
