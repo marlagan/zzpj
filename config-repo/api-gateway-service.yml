@@ -8,10 +8,10 @@ spring:
   cloud:
     gateway:
       routes:
-        - id: user-auth-route
-          uri: lb://user-service
-          predicates:
-            - Path=/api/users/login,/api/users/register
+#        - id: user-auth-route
+#          uri: lb://user-service
+#          predicates:
+#            - Path=/api/users/login,/api/users/register todo wrapp keycloack
 
         - id: user-service-route
           uri: lb://user-service
@@ -36,6 +36,3 @@ spring:
           uri: lb://notification-service
           predicates:
             - Path=/api/notifications/**
-
-jwt:
-  public-key: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAv2P0fDiHJhfg6FFjWeLJnaGi+DYsnfRC37griEUjoAUz4psQQS7sUzNepBcPYL/QxDcZXgyjWZeWTvDw9DUDZP51MmR6caL5sBo7oAl5qNtqOOg0T2dets+lF6kWPEKgK2a7g3LpQ2A2YR5IbNPQ/aL9RKFdRoARNs5jXUOBQ0Fhl87btMG58ufH3JCaMnVJm+7of+DIo/YZbTsrzBDisEJHKKEE2s0j4MPqG97quXxx16NienFBxzjJEztWzjdYmPFYyNRYsA1KYgX5qteuLKnqq5zW4d3ady1NOPRsRwQzAQuD7iECH+00ad0VCtwxN2qnMYr+oa4iled1ualyxQIDAQAB"

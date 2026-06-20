@@ -20,6 +20,9 @@ spring:
 
   kafka:
     bootstrap-servers: kafka:29092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
     consumer:
       group-id: pet-matching-group # Unikalna nazwa grupy dla tego serwisu
       auto-offset-reset: earliest

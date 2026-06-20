@@ -1,6 +1,6 @@
 package com.zzpj.purrsuit.mapservice.service;
 
-import com.zzpj.purrsuit.mapservice.dto.NearbyNoticesEvent;
+import com.zzpj.purrsuit.common.events.NearbyNoticesEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -14,7 +14,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class LocationMatchKafkaProducer {
 
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final KafkaTemplate<String, NearbyNoticesEvent> kafkaTemplate;
     private static final String TOPIC = "nearby-notices-topic";
 
     public void sendNearbyNotices(UUID lostNoticeId, List<UUID> nearbyFoundNoticeIds) {

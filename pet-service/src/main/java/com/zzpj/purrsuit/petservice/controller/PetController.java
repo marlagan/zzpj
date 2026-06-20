@@ -1,7 +1,7 @@
 package com.zzpj.purrsuit.petservice.controller;
 
 import com.zzpj.purrsuit.petservice.dto.MatchResultDto;
-import com.zzpj.purrsuit.petservice.model.MatchResult;
+import com.zzpj.purrsuit.petservice.entity.MatchResult;
 import com.zzpj.purrsuit.petservice.service.MatchingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,14 +15,6 @@ import java.util.UUID;
 public class PetController {
     private final MatchingService matchingService;
 
-    @PostMapping("/match/{noticeId}")
-    public ResponseEntity<List<MatchResultDto>> findMatches(@PathVariable UUID noticeId){
-        var results = matchingService.findMatches(noticeId);
-        var dtos = results.stream()
-                .map(this::toDto)
-                .toList();
-        return ResponseEntity.ok(dtos);
-    }
 
     @GetMapping("matches/{noticeId}")
     public ResponseEntity<List<MatchResultDto>> getMatches(@PathVariable UUID noticeId){
@@ -47,6 +39,7 @@ public class PetController {
                 result.getId(),
                 result.getLostNoticeId(),
                 result.getSeenNoticeId(),
+                result.getLostOwnerId(),
                 result.getSimilarityScore(),
                 result.getStatus(),
                 result.getCreatedAt());

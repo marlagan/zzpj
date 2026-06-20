@@ -30,5 +30,12 @@ if [ -n "$WAIT_FOR_EUREKA" ]; then
   echo "Eureka Server jest gotowa!"
 fi
 
+# 4. Czekanie na Kafkę
+if [ -n "$WAIT_FOR_KAFKA" ]; then
+  echo "Oczekiwanie na Kafka ($WAIT_FOR_KAFKA:29092)..."
+  while ! nc -z $WAIT_FOR_KAFKA 29092; do sleep 2; done
+  echo "Kafka działa!"
+fi
+
 echo "Wszystkie zależności gotowe. Start aplikacji Spring Boot!"
 exec java -jar app.jar

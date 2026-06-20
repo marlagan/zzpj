@@ -2,6 +2,9 @@ eureka:
   client:
     service-url:
       defaultZone: http://eureka-config-service:8761/eureka/
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
 spring:
   kafka:
     bootstrap-servers: kafka:29092
@@ -35,8 +38,3 @@ springdoc:
     path: /swagger-ui.html
   api-docs:
     path: /v3/api-docs
-
-jwt:
-  secret: ""
-  expiration: 3600000
-

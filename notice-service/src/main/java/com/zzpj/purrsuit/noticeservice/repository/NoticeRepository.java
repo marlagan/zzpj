@@ -11,6 +11,8 @@ import java.util.UUID;
 
 @Repository
 public interface NoticeRepository extends JpaRepository<Notice, UUID> {
+
     List<Notice> findByTypeAndStatus(NoticeType type, NoticeStatus status);
+
     List<Notice> findByReportedByUserIdOrderByCreatedAtDesc(UUID reportedByUserId);
 }

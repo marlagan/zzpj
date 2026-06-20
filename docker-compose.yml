@@ -1,11 +1,9 @@
-version: '3.8'
-
 services:
   # ==========================================
   # INFRASTRUKTURA
   # ==========================================
   postgres-db:
-    image: postgres:15
+    image: postgis/postgis:15-3.3-alpine
     container_name: purrsuit-postgres
     ports:
       - "5433:5432"
@@ -136,6 +134,7 @@ services:
       - cloud-config-service
       - eureka-config-service
       - keycloak
+      - kafka
 
   map-service:
     build:
@@ -149,6 +148,7 @@ services:
       - WAIT_FOR_DB=postgres-db
       - WAIT_FOR_CONFIG=cloud-config-service
       - WAIT_FOR_EUREKA=eureka-config-service
+      - WAIT_FOR_KAFKA=kafka
       - SPRING_CONFIG_IMPORT=optional:configserver:http://cloud-config-service:8888
       - "eureka.client.serviceUrl.defaultZone=http://eureka-config-service:8761/eureka/"
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/map_db
@@ -159,6 +159,7 @@ services:
       - postgres-db
       - cloud-config-service
       - eureka-config-service
+      - kafka
 
   notice-service:
     build:
@@ -172,15 +173,18 @@ services:
       - WAIT_FOR_DB=postgres-db
       - WAIT_FOR_CONFIG=cloud-config-service
       - WAIT_FOR_EUREKA=eureka-config-service
+      - WAIT_FOR_KAFKA=kafka
       - SPRING_CONFIG_IMPORT=optional:configserver:http://cloud-config-service:8888
       - "eureka.client.serviceUrl.defaultZone=http://eureka-config-service:8761/eureka/"
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/notice_db
       - SPRING_DATASOURCE_USERNAME=admin
       - SPRING_DATASOURCE_PASSWORD=admin
+      - GROQ_API_KEY=${GROQ_API_KEY}
     depends_on:
       - postgres-db
       - cloud-config-service
       - eureka-config-service
+      - kafka
 
   pet-service:
     build:
@@ -194,6 +198,7 @@ services:
       - WAIT_FOR_DB=postgres-db
       - WAIT_FOR_CONFIG=cloud-config-service
       - WAIT_FOR_EUREKA=eureka-config-service
+      - WAIT_FOR_KAFKA=kafka
       - SPRING_CONFIG_IMPORT=optional:configserver:http://cloud-config-service:8888
       - "eureka.client.serviceUrl.defaultZone=http://eureka-config-service:8761/eureka/"
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/pet_db
@@ -220,6 +225,7 @@ services:
       - WAIT_FOR_DB=postgres-db
       - WAIT_FOR_CONFIG=cloud-config-service
       - WAIT_FOR_EUREKA=eureka-config-service
+      - WAIT_FOR_KAFKA=kafka
       - SPRING_CONFIG_IMPORT=optional:configserver:http://cloud-config-service:8888
       - "eureka.client.serviceUrl.defaultZone=http://eureka-config-service:8761/eureka/"
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/notification_db
