@@ -23,5 +23,31 @@ public interface GeoLocationRepository extends JpaRepository<GeoLocation, UUID> 
             @Param("radius") double radius
     );
 
+    @Query(value = """
+            SELECT * FROM geo_locations g
+            WHERE g.species = :species
+              AND g.notice_type != :originType
+              AND ST_DWithin(g.location\\:\\:geography, ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)\\:\\:geography, :radius)
+            """, nativeQuery = true)
+    List<GeoLocation> findWithinRadiusAndCriteria(
+            @Param("lat") double lat,
+            @Param("lon") double lon,
+            @Param("radius") double radius,
+            @Param("species") String species,
+            @Param("originType") String originType
+    );
+
+    @Query(value = """
+            SELECT * FROM geo_locations g
+            WHERE ST_Within(g.location, ST_GeomFromText(:polygonWkt, 4326))
+              AND (:species IS NULL OR g.species = :species)
+              AND (:originType IS NULL OR g.notice_type != :originType)
+            """, nativeQuery = true)
+    List<GeoLocation> findWithinPolygon(
+            @Param("polygonWkt") String polygonWkt,
+            @Param("species") String species,
+            @Param("originType") String originType
+    );
+
     Optional<GeoLocation> findByNoticeId(UUID noticeId);
 }

@@ -23,9 +23,11 @@ public class NoticeLocationKafkaListener {
         locationMatchingService.save(
                 event.noticeId(),
                 event.noticeType(),
+                event.species(),
                 event.latitude(),
                 event.longitude(),
-                null
+                null,
+                event.noticeStatus()
         );
     }
 }

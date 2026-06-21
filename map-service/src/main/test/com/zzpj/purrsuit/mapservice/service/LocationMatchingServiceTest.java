@@ -1,6 +1,7 @@
 package com.zzpj.purrsuit.mapservice.service;
 
 import com.zzpj.purrsuit.mapservice.entity.GeoLocation;
+import com.zzpj.purrsuit.common.events.NoticeStatus;
 import com.zzpj.purrsuit.mapservice.repository.GeoLocationRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -75,7 +76,8 @@ class LocationMatchingServiceTest {
         when(repository.save(any(GeoLocation.class))).thenReturn(savedLocation);
 
         // when
-        GeoLocation result = service.save(noticeId, "LOST", lat, lon, 50.0);
+        GeoLocation result = service.save(noticeId, "LOST", "kot",
+                lat, lon, 50.0, NoticeStatus.ACTIVE);
 
         // then
         assertThat(result).isNotNull();
