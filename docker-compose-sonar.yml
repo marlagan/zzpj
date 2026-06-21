@@ -1,0 +1,18 @@
+services:
+  sonarqube:
+    image: sonarqube:9.9.4-community # Wersja LTS
+    container_name: sonarqube
+    ports:
+      - "9000:9000"
+    environment:
+      - SONAR_FORCEAUTHENTICATION=admin
+      - SONAR_WEB_PORT=9000
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_logs:/opt/sonarqube/logs
+      - sonarqube_extensions:/opt/sonarqube/extensions
+
+volumes:
+  sonarqube_data:
+  sonarqube_logs:
+  sonarqube_extensions:
