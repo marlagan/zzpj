@@ -1,6 +1,6 @@
 package com.zzpj.purrsuit.petservice.kafka;
 
-import com.zzpj.purrsuit.common.events.NoticeCreatedEvent;
+import com.zzpj.purrsuit.common.events.NoticeStatusUpdateEvent;
 import com.zzpj.purrsuit.petservice.service.MatchingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,20 +10,20 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class NoticeKafkaListener {
-
+public class NoticeUpdateListener {
     private final MatchingService matchingService;
 
     @KafkaListener(
-            topics = "notice-activated",
+            topics = "notice-update",
             groupId = "pet-notice-group"
     )
-    public void consumeNewNotice(NoticeCreatedEvent event) {
-        log.info("Odebrano nowe ogłoszenie z notice-service! Użytkownik:{}, ID: {}, Gatunek: {}, Typ: {}, Opis: {}",
-                event.userId(), event.noticeId(), event.species(), event.type(), event.description());
+    public void updateNotice(NoticeStatusUpdateEvent event){
+        log.info("Status zgłoszenia: {}, został zmieniony", event.noticeId());
+
         try {
-            matchingService.handleIncomingNotice(event);
-        } catch (Exception e) {
+            matchingService.updateNoticeStatus(event);
+
+        }catch (Exception e){
             log.error("Błąd podczas przetwarzania wiadomości z notice-service dla ogłoszenia {}", event.noticeId(), e);
         }
     }
