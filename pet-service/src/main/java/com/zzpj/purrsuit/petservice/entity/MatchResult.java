@@ -6,6 +6,12 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+
+/**
+ * Encja reprezentująca wynik dopasowania dwóch ogłoszeń.
+ * Przechowuje ocenę podobieństwa wyliczoną przez model AI oraz obecny status dopasowania.
+ */
+
 @Entity
 @Table(name = "match_results")
 @Getter
@@ -27,6 +33,9 @@ public class MatchResult {
     @Column(nullable = false)
     private UUID lostOwnerId;
 
+    /**
+     * Współczynnik prawdopodobieństwa (0.0 - 1.0) wyliczony przez LLM.
+     */
     @Column(nullable = false)
     private double similarityScore;
 
@@ -36,6 +45,9 @@ public class MatchResult {
 
     private LocalDateTime createdAt;
 
+    /**
+     * Automatycznie ustawia datę utworzenia rekordu przed zapisem do bazy danych.
+     */
     @PrePersist
     void prePersist(){
         this.createdAt = LocalDateTime.now();

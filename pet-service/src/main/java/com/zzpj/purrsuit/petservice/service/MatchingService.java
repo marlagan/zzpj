@@ -1,7 +1,9 @@
 package com.zzpj.purrsuit.petservice.service;
+import com.zzpj.purrsuit.common.events.MatchFoundNoticeEvent;
 import com.zzpj.purrsuit.common.events.NoticeCreatedEvent;
 import com.zzpj.purrsuit.common.events.NoticeStatusUpdateEvent;
 import com.zzpj.purrsuit.petservice.entity.PetNotice;
+import com.zzpj.purrsuit.petservice.kafka.MatchFoundNoticeProducer;
 import com.zzpj.purrsuit.petservice.kafka.MatchResultProducer;
 import com.zzpj.purrsuit.petservice.entity.MatchResult;
 import com.zzpj.purrsuit.petservice.enums.MatchStatus;
@@ -15,6 +17,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+
+/**
+ * Serwis koordynujący logikę dopasowywania zwierząt.
+ * Wywołuje analize semantyczną opisów zgłoszeń
+ * oraz wysyła odpowiednie zdarzenia w przypadku znalezienia dopasowania.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -22,12 +30,18 @@ public class MatchingService {
     private final PetNoticeRepository petNoticeRepository;
     private final SemanticMatchService semanticMatchService;
     private final MatchResultRepository matchResultRepository;
+    private final MatchFoundNoticeProducer matchFoundNoticeProducer;
     private final MatchResultProducer matchResultProducer;
 
     @Value("${matching.similarity.threshold:0.75}")
     private double threshold;
 
-
+    /**
+     * Przetwarza nowe ogłoszenie otrzymane przez broker komunikatów.
+     * Zapisuje je w lokalnej bazie, a następnie inicjuje proces poszukiwania dopasowań.
+     *
+     * @param event zdarzenie utworzenia nowego ogłoszenia
+     */
     public void handleIncomingNotice(NoticeCreatedEvent event) {
         log.info("Zapisywanie ogłoszenia z Kafki i szukanie dopasowań: {}", event.noticeId());
 
@@ -77,6 +91,7 @@ public class MatchingService {
                 matchResultRepository.save(result);
 
                 matchResultProducer.sendMatchNotification(result);
+                matchFoundNoticeProducer.sendFoundMatchNotice(result);
             }
         });
     }
@@ -137,6 +152,14 @@ public class MatchingService {
         });
     }
 
+    /**
+     * Dokonuje oceny podobieństwa dwóch ogłoszeń korzystając z SemanticMatchService
+     * i zapisuje wynik w bazie danych.
+     *
+     * @param query ogłoszenie bazowe
+     * @param candidate ogłoszenie potencjalnie pasujące
+     * @return zapisany wynik dopasowania
+     */
     private MatchResult scoreCandidate(PetNotice query, PetNotice candidate) {
         double score = semanticMatchService.comparePetDescription(
                 query.getDescription(),
@@ -159,17 +182,34 @@ public class MatchingService {
 
         return matchResultRepository.save(result);
     }
+
+    /**
+     * Zwraca listę wszystkich dopasowań dla podanego ID ogłoszenia.
+     *
+     * @param noticeID identyfikator ogłoszenia
+     * @return lista wyników dopasowań
+     */
     public List<MatchResult> getMatchesForNotice(UUID noticeID) {
         return matchResultRepository.findByLostNoticeId(noticeID);
     }
 
     /**
-     * Metoda do pobierania szczegółów konkretnego dopasowania.
+     * Pobiera szczegóły konkretnego dopasowania pomiędzy zgubionym a znalezionym ogłoszeniem.
+     *
+     * @param lostNoticeId identyfikator zgłoszenia zgubienia
+     * @param seenNoticeId identyfikator zgłoszenia znalezienia
+     * @return szczegóły dopasowania opakowane w Optional
      */
     public Optional<MatchResult> getMatchDetail(UUID lostNoticeId, UUID seenNoticeId) {
         return matchResultRepository.findByLostNoticeIdAndSeenNoticeId(lostNoticeId, seenNoticeId);
     }
 
+    /**
+     * Sprawdza czy aktualny status zgłoszenia w bazie danych to ACTIVE lub PENDING
+     *
+     * @param status status
+     * @return flaga  informująca o poprawności statusu do dalszych operacji
+     */
     private boolean isStatusActiveOrPending(String status) {
         if (status == null) {
             return false;
