@@ -40,12 +40,6 @@ public class SemanticMatchService {
                 Example: 0.85
                 """.formatted(descriptionA, descriptionB);
 
-//        var messages = List.of("role","user","content",prompt);
-//        var requestedBody = new java.util.HashMap<String,Object>();
-//        requestedBody.put("model", llmModel);
-//        requestedBody.put("messages",messages);
-//        requestedBody.put("temperature",0.1);
-//        requestedBody.put("max_tokens",15);
 
         var request = new GroqRequest(
                 llmModel,

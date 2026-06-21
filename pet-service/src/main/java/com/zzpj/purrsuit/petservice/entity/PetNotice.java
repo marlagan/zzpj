@@ -24,4 +24,6 @@ public class PetNotice {
 
     @Column(columnDefinition = "TEXT")
     private String description;
+
+    private String status;
 }

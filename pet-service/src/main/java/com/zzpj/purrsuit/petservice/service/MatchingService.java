@@ -1,5 +1,6 @@
 package com.zzpj.purrsuit.petservice.service;
 import com.zzpj.purrsuit.common.events.NoticeCreatedEvent;
+import com.zzpj.purrsuit.common.events.NoticeStatusUpdateEvent;
 import com.zzpj.purrsuit.petservice.entity.PetNotice;
 import com.zzpj.purrsuit.petservice.kafka.MatchResultProducer;
 import com.zzpj.purrsuit.petservice.entity.MatchResult;
@@ -30,13 +31,13 @@ public class MatchingService {
     public void handleIncomingNotice(NoticeCreatedEvent event) {
         log.info("Zapisywanie ogłoszenia z Kafki i szukanie dopasowań: {}", event.noticeId());
 
-        // 1. Zapisz nowe ogłoszenie LOKALNIE w pet-service
         PetNotice newNotice = PetNotice.builder()
                 .noticeId(event.noticeId())
                 .type(event.type())
                 .userId(event.userId())
                 .species(event.species())
                 .description(event.description())
+                .status(event.status())
                 .build();
         petNoticeRepository.save(newNotice);
 
@@ -80,6 +81,14 @@ public class MatchingService {
         });
     }
 
+    public void updateNoticeStatus(NoticeStatusUpdateEvent event){
+        petNoticeRepository.findById(event.noticeId()).ifPresent(notice -> {
+            notice.setStatus(event.newStatus());
+            petNoticeRepository.save(notice);
+            log.info("Zaktualizowano status zgłoszenia {} na: {}", event.noticeId(), event.newStatus());
+        });
+    }
+
     public void processLocationMatchEvent(UUID sourceNoticeId, List<UUID> nearbyNoticeIds) {
         log.info("Analiza zbieżności lokalizacji dla ogłoszenia {} ({} potencjalnych sąsiadów)",
                 sourceNoticeId, nearbyNoticeIds.size());
@@ -100,6 +109,7 @@ public class MatchingService {
         List<PetNotice> candidates = petNoticeRepository.findAllById(nearbyNoticeIds).stream()
                 .filter(candidate -> candidate.getSpecies().equalsIgnoreCase(sourceNotice.getSpecies()))
                 .filter(candidate -> !candidate.getType().equalsIgnoreCase(sourceNotice.getType()))
+                .filter(candidate -> isStatusActiveOrPending(candidate.getStatus()))
                 .toList();
 
         if (candidates.isEmpty()) {
@@ -158,5 +168,12 @@ public class MatchingService {
      */
     public Optional<MatchResult> getMatchDetail(UUID lostNoticeId, UUID seenNoticeId) {
         return matchResultRepository.findByLostNoticeIdAndSeenNoticeId(lostNoticeId, seenNoticeId);
+    }
+
+    private boolean isStatusActiveOrPending(String status) {
+        if (status == null) {
+            return false;
+        }
+        return status.equalsIgnoreCase("ACTIVE") || status.equalsIgnoreCase("PENDING");
     }
 }
