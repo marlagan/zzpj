@@ -18,3 +18,14 @@ export type MapNoticeMarker = {
     noticeType: string;
     species: string;
 };
+
+export type MapPoint = {
+    lat: number;
+    lon: number;
+};
+
+export type AreaSearchRequest = {
+    polygonPoints: MapPoint[];
+    species?: string | null;
+    originType?: string | null;
+};

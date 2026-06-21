@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { Notice } from "../types/notice";
-import type { MapNoticeMarker } from "../types/map";
+import type { MapNoticeMarker, MapPoint } from "../types/map";
 import { calculateSearchRadiusMeters } from "../utils/geo";
 import catMarkerImage from "../assets/cat8.jpg";
 import dogMarkerImage from "../assets/dog.jpg";
@@ -26,6 +26,9 @@ type NoticeMapProps = {
     sightingMarker?: { lat: number; lng: number } | null;
     userLocation?: [number, number] | null;
     recenterKey?: number;
+    drawingArea?: boolean;
+    areaPolygon?: MapPoint[] | null;
+    autoFitBounds?: boolean;
 };
 
 function markerSizeForZoom(zoom: number): number {
@@ -80,12 +83,17 @@ export default function NoticeMap({
     sightingMarker = null,
     userLocation = null,
     recenterKey = 0,
+    drawingArea = false,
+    areaPolygon = null,
+    autoFitBounds = true,
 }: NoticeMapProps) {
     const mapContainerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<L.Map | null>(null);
     const markersLayerRef = useRef<L.LayerGroup | null>(null);
     const radiusCircleRef = useRef<L.Circle | null>(null);
     const sightingMarkerRef = useRef<L.Marker | null>(null);
+    const areaLayerRef = useRef<L.Polygon | L.Polyline | null>(null);
+    const vertexLayerRef = useRef<L.LayerGroup | null>(null);
     const onSelectRef = useRef(onMarkerSelect);
     const onMapClickRef = useRef(onMapClick);
     const [mapZoom, setMapZoom] = useState(DEFAULT_ZOOM);
@@ -132,6 +140,8 @@ export default function NoticeMap({
             markersLayerRef.current = null;
             radiusCircleRef.current = null;
             sightingMarkerRef.current = null;
+            areaLayerRef.current = null;
+            vertexLayerRef.current = null;
         };
     }, []);
 
@@ -160,14 +170,14 @@ export default function NoticeMap({
 
     useEffect(() => {
         const map = mapRef.current;
-        if (!map || markers.length === 0) return;
+        if (!map || !autoFitBounds || markers.length === 0) return;
 
         const bounds = L.latLngBounds(markers.map((m) => [m.latitude, m.longitude] as [number, number]));
         if (bounds.isValid()) {
             map.fitBounds(bounds.pad(0.2));
             setMapZoom(map.getZoom());
         }
-    }, [markers]);
+    }, [markers, autoFitBounds]);
 
     useEffect(() => {
         const layer = markersLayerRef.current;
@@ -230,6 +240,55 @@ export default function NoticeMap({
         }).addTo(map);
     }, [pickingSightingLocation, sightingMarker, mapZoom]);
 
+    useEffect(() => {
+        const map = mapRef.current;
+        if (!map) return;
+
+        if (areaLayerRef.current) {
+            areaLayerRef.current.remove();
+            areaLayerRef.current = null;
+        }
+        if (vertexLayerRef.current) {
+            vertexLayerRef.current.remove();
+            vertexLayerRef.current = null;
+        }
+
+        if (!areaPolygon || areaPolygon.length === 0) return;
+
+        const latLngs = areaPolygon.map((p) => [p.lat, p.lon] as [number, number]);
+
+        if (areaPolygon.length >= 3) {
+            areaLayerRef.current = L.polygon(latLngs, {
+                color: "#222",
+                weight: 3,
+                fillColor: "#aa3bff",
+                fillOpacity: drawingArea ? 0.15 : 0.22,
+                dashArray: drawingArea ? "6 4" : undefined,
+            }).addTo(map);
+        } else if (areaPolygon.length === 2) {
+            areaLayerRef.current = L.polyline(latLngs, {
+                color: "#222",
+                weight: 3,
+                dashArray: "6 4",
+            }).addTo(map);
+        }
+
+        const vertices = L.layerGroup();
+        latLngs.forEach((ll) => {
+            vertices.addLayer(
+                L.circleMarker(ll, {
+                    radius: 5,
+                    color: "#222",
+                    weight: 2,
+                    fillColor: drawingArea ? "#fff" : "#aa3bff",
+                    fillOpacity: 1,
+                }),
+            );
+        });
+        vertices.addTo(map);
+        vertexLayerRef.current = vertices;
+    }, [areaPolygon, drawingArea]);
+
     return (
         <div
             ref={mapContainerRef}
@@ -238,7 +297,7 @@ export default function NoticeMap({
                 height: "100%",
                 border: "4px solid #222",
                 boxSizing: "border-box",
-                cursor: pickingSightingLocation ? "crosshair" : "grab",
+                cursor: pickingSightingLocation || drawingArea ? "crosshair" : "grab",
             }}
         />
     );
