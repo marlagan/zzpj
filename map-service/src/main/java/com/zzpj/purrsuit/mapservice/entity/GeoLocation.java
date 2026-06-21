@@ -28,6 +28,12 @@ public class GeoLocation {
     @Column(nullable = false, length = 20)
     private String noticeType;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private com.zzpj.purrsuit.common.events.NoticeStatus noticeStatus;
+
+    private String species;
+
     // Współrzędne geograficzne
     @Column(columnDefinition = "geometry(Point, 4326)", nullable = false)
     private Point location;
