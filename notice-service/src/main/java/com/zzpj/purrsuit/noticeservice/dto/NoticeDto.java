@@ -16,7 +16,6 @@ public final class NoticeDto {
     @Data
     public static class CreateNoticeRequest {
         @NotNull public NoticeType type;           // LOST lub FOUND
-        @NotNull public UUID reportedByUserId;
         @NotNull public String species;
         public String breed;
         public String colorDescription;

@@ -27,13 +27,20 @@ public class NoticeController {
      * Tworzy zgłoszenie LOST lub FOUND.
      * Groq automatycznie generuje opis z danych formularza.
      * Ogłoszenie wchodzi od razu jako ACTIVE.
+     *
+     * UUID zgłaszającego NIE jest przyjmowany z body requestu — pobierany jest
+     * z tokenu JWT zalogowanego użytkownika (claim "sub"), dzięki czemu nie da się
+     * utworzyć zgłoszenia w imieniu innego użytkownika. To samo UUID trafia
+     * następnie do pet-service przez event Kafka "notice-activated".
      */
     @PostMapping
     @Operation(summary = "Utwórz zgłoszenie LOST lub FOUND")
     public ResponseEntity<NoticeResponse> createNotice(
-            @Valid @RequestBody CreateNoticeRequest request) {
+            @Valid @RequestBody CreateNoticeRequest request,
+            @AuthenticationPrincipal Jwt jwt) {
+        UUID reportedByUserId = UUID.fromString(jwt.getClaimAsString("sub"));
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(noticeService.createNotice(request));
+                .body(noticeService.createNotice(request, reportedByUserId));
     }
 
     /**
