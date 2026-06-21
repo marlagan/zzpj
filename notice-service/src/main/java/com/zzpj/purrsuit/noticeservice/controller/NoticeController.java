@@ -1,6 +1,6 @@
 package com.zzpj.purrsuit.noticeservice.controller;
 
-import com.zzpj.purrsuit.noticeservice.domain.NoticeStatus;
+import com.zzpj.purrsuit.common.events.NoticeStatus;
 import com.zzpj.purrsuit.noticeservice.domain.NoticeType;
 import com.zzpj.purrsuit.noticeservice.dto.NoticeDto.*;
 import com.zzpj.purrsuit.noticeservice.service.NoticeService;

@@ -1,5 +1,6 @@
 package com.zzpj.purrsuit.mapservice.entity;
 
+import com.zzpj.purrsuit.common.events.NoticeStatus;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Data;
@@ -30,7 +31,7 @@ public class GeoLocation {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private com.zzpj.purrsuit.common.events.NoticeStatus noticeStatus;
+    private NoticeStatus noticeStatus;
 
     private String species;
 

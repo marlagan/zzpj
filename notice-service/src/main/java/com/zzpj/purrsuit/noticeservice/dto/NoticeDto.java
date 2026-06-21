@@ -1,6 +1,6 @@
 package com.zzpj.purrsuit.noticeservice.dto;
 
-import com.zzpj.purrsuit.noticeservice.domain.NoticeStatus;
+import com.zzpj.purrsuit.common.events.NoticeStatus;
 import com.zzpj.purrsuit.noticeservice.domain.NoticeType;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;

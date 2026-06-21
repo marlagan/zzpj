@@ -1,7 +1,9 @@
 package com.zzpj.purrsuit.mapservice.repository;
 
+import com.zzpj.purrsuit.common.events.NoticeStatus;
 import com.zzpj.purrsuit.mapservice.entity.GeoLocation;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -26,6 +28,7 @@ public interface GeoLocationRepository extends JpaRepository<GeoLocation, UUID> 
     @Query(value = """
             SELECT * FROM geo_locations g
             WHERE g.species = :species
+              AND g.notice_status IN ('ACTIVE', 'PENDING_MATCH')
               AND g.notice_type != :originType
               AND ST_DWithin(g.location\\:\\:geography, ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)\\:\\:geography, :radius)
             """, nativeQuery = true)
@@ -50,4 +53,8 @@ public interface GeoLocationRepository extends JpaRepository<GeoLocation, UUID> 
     );
 
     Optional<GeoLocation> findByNoticeId(UUID noticeId);
+
+    @Modifying
+    @Query("UPDATE GeoLocation g SET g.noticeStatus = :noticeStatus WHERE g.noticeId = :noticeId")
+    void updateStatusByNoticeId(@Param("noticeId") UUID noticeId, @Param("noticeStatus") NoticeStatus noticeStatus);
 }

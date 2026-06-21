@@ -1,6 +1,7 @@
 package com.zzpj.purrsuit.petservice.service;
 
 import com.zzpj.purrsuit.common.events.NoticeCreatedEvent;
+import com.zzpj.purrsuit.common.events.NoticeStatus;
 import com.zzpj.purrsuit.petservice.entity.PetNotice;
 import com.zzpj.purrsuit.petservice.enums.MatchStatus;
 import com.zzpj.purrsuit.petservice.kafka.MatchResultProducer;
@@ -62,7 +63,7 @@ class MatchingServiceTest {
     @Test
     void handleIncomingNotice_ShouldSaveLocallyAndFindMatch_WhenScoreIsAboveThreshold() {
         NoticeCreatedEvent event = new NoticeCreatedEvent(
-                newNoticeId, userID,"Dog", "Czarny mops", "LOST", "ACTIVE"
+                newNoticeId, userID,"Dog", "Czarny mops", "LOST", NoticeStatus.ACTIVE
         );
 
         PetNotice candidate = PetNotice.builder()
@@ -102,7 +103,7 @@ class MatchingServiceTest {
     @Test
     void handleIncomingNotice_ShouldNotPublishMatch_WhenScoreIsBelowThreshold() {
         NoticeCreatedEvent event = new NoticeCreatedEvent(
-                newNoticeId, userID, "Dog", "Czarny mops", "LOST", "ACTIVE"
+                newNoticeId, userID, "Dog", "Czarny mops", "LOST", NoticeStatus.ACTIVE
         );
 
         PetNotice candidate = PetNotice.builder()
@@ -131,7 +132,7 @@ class MatchingServiceTest {
     @Test
     void handleIncomingNotice_ShouldStopProcessing_WhenNoCandidatesFound() {
         NoticeCreatedEvent event = new NoticeCreatedEvent(
-                newNoticeId, userID, "Cat", "Biały kot", "FOUND", "ACTIVE"
+                newNoticeId, userID, "Cat", "Biały kot", "FOUND", NoticeStatus.ACTIVE
         );
 
         when(petNoticeRepository.findByTypeAndSpecies("LOST", "Cat"))
