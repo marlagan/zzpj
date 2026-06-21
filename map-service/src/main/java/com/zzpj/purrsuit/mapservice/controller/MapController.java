@@ -8,6 +8,7 @@ import com.zzpj.purrsuit.mapservice.service.LocationMatchingService;
 import com.zzpj.purrsuit.mapservice.service.OpenStreetMapService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,19 +16,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/maps/locations")
 public class MapController {
     private final LocationMatchingService locationService;
     private final OpenStreetMapService mapClient;
-
-    public MapController(
-            OpenStreetMapService mapClient,
-            LocationMatchingService locationService
-            ) {
-        this.mapClient = mapClient;
-        this.locationService = locationService;
-    }
 
     @Operation(summary = "Pobierz koordynaty z opisu (z użyciem AI)", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/analyze-location")
