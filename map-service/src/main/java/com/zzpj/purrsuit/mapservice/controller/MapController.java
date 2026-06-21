@@ -1,5 +1,6 @@
 package com.zzpj.purrsuit.mapservice.controller;
 
+import com.zzpj.purrsuit.mapservice.domain.AreaSearchRequest;
 import com.zzpj.purrsuit.mapservice.domain.Failure;
 import com.zzpj.purrsuit.mapservice.domain.SaveLocationRequest;
 import com.zzpj.purrsuit.mapservice.domain.Success;
@@ -47,9 +48,11 @@ public class MapController {
         return ResponseEntity.ok(locationService.save(
                 request.noticeId(),
                 request.noticeType(),
+                request.species(),
                 request.lat(),
                 request.lon(),
-                request.accuracyRadiusMeters()
+                request.accuracyRadiusMeters(),
+                request.noticeStatus()
         ));
     }
 
@@ -69,5 +72,10 @@ public class MapController {
             @RequestParam int daysMissing) {
 
         return ResponseEntity.ok(locationService.findMatchesForNotice(noticeId, species, daysMissing));
+    }
+
+    @PostMapping("/search-by-area")
+    public ResponseEntity<List<GeoLocation>> getMatchesWithinArea(@RequestBody AreaSearchRequest request) {
+        return ResponseEntity.ok(locationService.findMatchesWithinArea(request));
     }
 }

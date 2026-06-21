@@ -6,7 +6,9 @@ import java.util.UUID;
 public record NoticeLocationEvent(
     UUID noticeId,
     String noticeType,
+    String species,
     double latitude,
     double longitude,
-    LocalDateTime createdAt
+    LocalDateTime createdAt,
+    NoticeStatus noticeStatus
 ) {}
