@@ -62,7 +62,7 @@ class MatchingServiceTest {
     @Test
     void handleIncomingNotice_ShouldSaveLocallyAndFindMatch_WhenScoreIsAboveThreshold() {
         NoticeCreatedEvent event = new NoticeCreatedEvent(
-                newNoticeId, userID,"Dog", "Czarny mops", "LOST"
+                newNoticeId, userID,"Dog", "Czarny mops", "LOST", "ACTIVE"
         );
 
         PetNotice candidate = PetNotice.builder()
@@ -71,6 +71,7 @@ class MatchingServiceTest {
                 .type("FOUND")
                 .species("Dog")
                 .description("Czarny pies mops")
+                .status("ACTIVE")
                 .build();
 
         when(petNoticeRepository.findByTypeAndSpecies("FOUND", "Dog"))
@@ -101,7 +102,7 @@ class MatchingServiceTest {
     @Test
     void handleIncomingNotice_ShouldNotPublishMatch_WhenScoreIsBelowThreshold() {
         NoticeCreatedEvent event = new NoticeCreatedEvent(
-                newNoticeId, userID, "Dog", "Czarny mops", "LOST"
+                newNoticeId, userID, "Dog", "Czarny mops", "LOST", "ACTIVE"
         );
 
         PetNotice candidate = PetNotice.builder()
@@ -130,7 +131,7 @@ class MatchingServiceTest {
     @Test
     void handleIncomingNotice_ShouldStopProcessing_WhenNoCandidatesFound() {
         NoticeCreatedEvent event = new NoticeCreatedEvent(
-                newNoticeId, userID, "Cat", "Biały kot", "FOUND"
+                newNoticeId, userID, "Cat", "Biały kot", "FOUND", "ACTIVE"
         );
 
         when(petNoticeRepository.findByTypeAndSpecies("LOST", "Cat"))
