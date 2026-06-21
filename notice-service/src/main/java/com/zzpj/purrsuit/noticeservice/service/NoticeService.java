@@ -1,6 +1,6 @@
 package com.zzpj.purrsuit.noticeservice.service;
 
-import com.zzpj.purrsuit.noticeservice.domain.NoticeStatus;
+import com.zzpj.purrsuit.common.events.NoticeStatus;
 import com.zzpj.purrsuit.noticeservice.domain.NoticeType;
 import com.zzpj.purrsuit.noticeservice.dto.NoticeDto.*;
 import com.zzpj.purrsuit.noticeservice.entity.Notice;
@@ -124,14 +124,17 @@ public class NoticeService {
                 n.getReportedByUserId(),
                 n.getSpecies(),
                 resolveDescription(n),
-                n.getType());
+                n.getType(),
+                n.getStatus());
 
         // Event 2 → map-service: noticeId + typ + lokalizacja + data utworzenia
         eventProducer.sendLocationEvent(
                 n.getId(),
                 n.getType(),
                 n.getLocation(),
-                n.getCreatedAt());
+                n.getCreatedAt(),
+                n.getStatus(),
+                n.getSpecies());
     }
 
     NoticeResponse toResponse(Notice n) {

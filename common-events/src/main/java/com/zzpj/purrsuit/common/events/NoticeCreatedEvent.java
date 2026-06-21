@@ -7,4 +7,4 @@ public record NoticeCreatedEvent(UUID noticeId,
                                  String species,
                                  String description,
                                  String type,
-                                 String status) {}
+                                 NoticeStatus status) {}

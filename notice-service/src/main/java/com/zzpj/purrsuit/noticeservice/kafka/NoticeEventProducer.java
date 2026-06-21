@@ -3,6 +3,7 @@ package com.zzpj.purrsuit.noticeservice.kafka;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zzpj.purrsuit.common.events.NoticeCreatedEvent;
 import com.zzpj.purrsuit.common.events.NoticeLocationEvent;
+import com.zzpj.purrsuit.common.events.NoticeStatus;
 import com.zzpj.purrsuit.noticeservice.domain.NoticeType;
 import lombok.Builder;
 import lombok.Data;
@@ -39,9 +40,9 @@ public class NoticeEventProducer {
      * Przekazuje noticeId, gatunek i opis — pet-service porównuje opisy
      * przez Groq LLM i szuka dopasowań (score ≥ 0.75).
      */
-    public void sendDescriptionEvent(UUID noticeId, UUID reportedByUserId,String species, String description, NoticeType type) {
+    public void sendDescriptionEvent(UUID noticeId, UUID reportedByUserId,String species, String description, NoticeType type, NoticeStatus status) {
         try {
-            var event = new NoticeCreatedEvent(noticeId, reportedByUserId, species, description, type.toString());
+            var event = new NoticeCreatedEvent(noticeId, reportedByUserId, species, description, type.toString(), status);
             kafkaDescriptionTemplate.send(TOPIC_DESCRIPTION, noticeId.toString(), event);
             log.info("Kafka [{}] key={}", TOPIC_DESCRIPTION, noticeId);
         } catch (Exception e) {
@@ -56,9 +57,9 @@ public class NoticeEventProducer {
      * zapytania ST_DWithin w PostGIS.
      */
     public void sendLocationEvent(UUID noticeId, NoticeType noticeType,
-                                  Point location, LocalDateTime createdAt) {
+                                  Point location, LocalDateTime createdAt, NoticeStatus status, String species) {
         try {
-            var event = new NoticeLocationEvent(noticeId, noticeType.toString(), location.getY(), location.getX(), createdAt);
+            var event = new NoticeLocationEvent(noticeId, noticeType.toString(), species, location.getY(), location.getX(), createdAt, status);
             kafkaMapTemplate.send(TOPIC_LOCATION, noticeId.toString(), event);
             log.info("Kafka [{}] key={}", TOPIC_LOCATION, noticeId);
         } catch (Exception e) {

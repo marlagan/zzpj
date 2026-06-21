@@ -1,6 +1,6 @@
 package com.zzpj.purrsuit.noticeservice.entity;
 
-import com.zzpj.purrsuit.noticeservice.domain.NoticeStatus;
+import com.zzpj.purrsuit.common.events.NoticeStatus;
 import com.zzpj.purrsuit.noticeservice.domain.NoticeType;
 import lombok.*;
 import org.locationtech.jts.geom.Point;

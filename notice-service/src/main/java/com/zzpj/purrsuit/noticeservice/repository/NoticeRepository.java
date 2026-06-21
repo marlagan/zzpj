@@ -1,6 +1,6 @@
 package com.zzpj.purrsuit.noticeservice.repository;
 
-import com.zzpj.purrsuit.noticeservice.domain.NoticeStatus;
+import com.zzpj.purrsuit.common.events.NoticeStatus;
 import com.zzpj.purrsuit.noticeservice.domain.NoticeType;
 import com.zzpj.purrsuit.noticeservice.entity.Notice;
 import org.springframework.data.jpa.repository.JpaRepository;

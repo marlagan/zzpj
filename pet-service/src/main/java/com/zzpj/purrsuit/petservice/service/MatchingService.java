@@ -51,7 +51,7 @@ public class MatchingService {
                 .userId(event.userId())
                 .species(event.species())
                 .description(event.description())
-                .status(event.status())
+                .status(event.status().toString())
                 .build();
         petNoticeRepository.save(newNotice);
 
