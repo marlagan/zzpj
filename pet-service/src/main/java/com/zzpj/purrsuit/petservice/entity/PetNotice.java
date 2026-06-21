@@ -7,6 +7,11 @@ import lombok.*;
 
 import java.util.UUID;
 
+/**
+ * Lokalna reprezentacja ogłoszenia
+ * Dane te są replikowane z głównego serwisu ogłoszeń poprzez Kafkę i służą
+ * do szybkich zapytań i analizy semantycznej opisów przez LLM.
+ */
 
 @Entity
 @Getter
@@ -19,8 +24,8 @@ public class PetNotice {
     private UUID noticeId;
 
     private UUID userId;
-    private String type;    // np. "LOST" lub "FOUND"
-    private String species; // np. "kot"
+    private String type;
+    private String species;
 
     @Column(columnDefinition = "TEXT")
     private String description;

@@ -7,12 +7,21 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
+/**
+ * Nasłuchuje zdarzeń o aktualizacji statusu ogłoszeń.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class NoticeUpdateListener {
     private final MatchingService matchingService;
 
+    /**
+     * Konsumuje informacje o zmianie statusu ogłoszenia z tematu "notice-update".
+     * Wykorzystywane do aktualizacji stanu lokalnego rekordu zgłoszenia.
+     *
+     * @param event zdarzenie zmiany statusu
+     */
     @KafkaListener(
             topics = "notice-update",
             groupId = "pet-notice-group"

@@ -8,6 +8,11 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Serwis odpowiedzialny za analizę semantyczną opisów zgłoszeń.
+ * Wykorzystuje zewnętrzne API Groq do oceny prawdopodobieństwa,
+ * że dwa różne opisy dotyczą tego samego zwierzęcia.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -26,6 +31,14 @@ public class SemanticMatchService {
     private record Messages(String role, String content){}
     private record GroqRequest(String model, List<Messages> messages, double temperature, int max_tokens){}
 
+    /**
+     * Porównuje dwa opisy zwierząt i zwraca wyliczony współczynnik podobieństwa.
+     * Generuje odpowiedni prompt dla modelu językowego i parsuje odpowiedź.
+     *
+     * @param descriptionA opis pierwszego zwierzęcia
+     * @param descriptionB opis drugiego zwierzęcia
+     * @return wartość zmiennoprzecinkowa z zakresu 0.0 - 1.0 określająca pewność dopasowania
+     */
     public double comparePetDescription(String descriptionA, String descriptionB){
         var prompt = """
                  You are an expert at identifying animals from descriptions.
@@ -66,6 +79,13 @@ public class SemanticMatchService {
         return parseScore(response);
     }
 
+    /**
+     * Parsuje odpowiedź JSON z API Groq w celu wydobycia samej liczby.
+     * W przypadku błędu parsowania, bezpiecznie loguje ostrzeżenie i zwraca 0.0.
+     *
+     * @param response zdeserializowana odpowiedź z API w formie mapy
+     * @return współczynnik prawdopodobieństwa
+     */
     private double parseScore(Map<?, ?> response){
         try {
             var choices = (List<Map<?, ?>>) response.get("choices");
@@ -77,7 +97,4 @@ public class SemanticMatchService {
             return 0.0;
         }
     }
-
-
-
 }

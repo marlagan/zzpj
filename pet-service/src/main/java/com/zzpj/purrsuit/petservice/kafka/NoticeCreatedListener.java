@@ -7,6 +7,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
+/**
+ * Nasłuchuje zdarzeń o nowo dodanych ogłoszeniach do systemu.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -14,6 +17,12 @@ public class NoticeCreatedListener {
 
     private final MatchingService matchingService;
 
+    /**
+     * Odbiera informacje o nowym ogłoszeniu z tematu "notice-activated",
+     * co inicjuje zapis w lokalnej bazie i proces szukania dopasowań.
+     *
+     * @param event zdarzenie utworzenia ogłoszenia zawierające jego szczegóły
+     */
     @KafkaListener(
             topics = "notice-activated",
             groupId = "pet-notice-group"
