@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.zzpj.purrsuit.noticeservice.kafka.NoticeUpdateProducer;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,6 +27,7 @@ public class NoticeMatchService {
     private final NoticeMatchRepository noticeMatchRepository;
     private final NoticeRepository noticeRepository;
     private final MatchDecisionProducer matchDecisionProducer;
+    private final NoticeUpdateProducer noticeUpdateProducer;
 
     /**
      * Wywoływane przez MatchResultKafkaListener po odebraniu MatchResultEvent
@@ -73,6 +75,9 @@ public class NoticeMatchService {
         setNoticeStatus(match.getLostNoticeId(), NoticeStatus.RESOLVED);
         setNoticeStatus(match.getSeenNoticeId(), NoticeStatus.RESOLVED);
 
+        noticeUpdateProducer.sendNoticeStatusUpdate(match.getLostNoticeId(), NoticeStatus.RESOLVED);
+        noticeUpdateProducer.sendNoticeStatusUpdate(match.getSeenNoticeId(), NoticeStatus.RESOLVED);
+
         matchDecisionProducer.notifyMatchConfirmed(match);
         log.info("Dopasowanie {} potwierdzone przez użytkownika {}", matchId, requestingUserId);
         return match;
@@ -93,6 +98,9 @@ public class NoticeMatchService {
 
         setNoticeStatus(match.getLostNoticeId(), NoticeStatus.ACTIVE);
         setNoticeStatus(match.getSeenNoticeId(), NoticeStatus.ACTIVE);
+
+        noticeUpdateProducer.sendNoticeStatusUpdate(match.getLostNoticeId(), NoticeStatus.ACTIVE);
+        noticeUpdateProducer.sendNoticeStatusUpdate(match.getSeenNoticeId(), NoticeStatus.ACTIVE);
 
         matchDecisionProducer.notifyMatchRejected(match);
         log.info("Dopasowanie {} odrzucone przez użytkownika {}", matchId, requestingUserId);
