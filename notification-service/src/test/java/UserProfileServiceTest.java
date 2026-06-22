@@ -1,36 +1,24 @@
-import com.zzpj.purrsuit.notificationservice.controller.NotificationController;
-import com.zzpj.purrsuit.notificationservice.dto.NotificationDTO;
 import com.zzpj.purrsuit.notificationservice.dto.UserProfileEvent;
 import com.zzpj.purrsuit.notificationservice.entity.UserProfile;
-import com.zzpj.purrsuit.notificationservice.enums.NotificationChannel;
-import com.zzpj.purrsuit.notificationservice.enums.NotificationType;
 import com.zzpj.purrsuit.notificationservice.repository.UserProfileRepository;
-import com.zzpj.purrsuit.notificationservice.service.EmailService;
-import com.zzpj.purrsuit.notificationservice.service.NotificationService;
 import com.zzpj.purrsuit.notificationservice.service.UserProfileService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-
+@ExtendWith(MockitoExtension.class) // 💡 FIX: This tells JUnit 5 to process Mockito annotations
 public class UserProfileServiceTest {
+
     @Mock
     private UserProfileRepository userProfileRepository;
 
@@ -48,8 +36,10 @@ public class UserProfileServiceTest {
                 "Kowalski"
         );
 
+        // When
         userProfileService.save(event);
 
+        // Then
         ArgumentCaptor<UserProfile> profileCaptor = ArgumentCaptor.forClass(UserProfile.class);
         verify(userProfileRepository, times(1)).save(profileCaptor.capture());
 
@@ -85,9 +75,11 @@ public class UserProfileServiceTest {
 
     @Test
     void get_ShouldReturnEmptyOptional_WhenProfileDoesNotExist() {
+        // Given
         UUID profileId = UUID.randomUUID();
         when(userProfileRepository.findById(profileId)).thenReturn(Optional.empty());
 
+        // When
         Optional<UserProfile> result = userProfileService.get(profileId);
 
         // Then
