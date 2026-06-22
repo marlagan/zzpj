@@ -78,6 +78,9 @@ public class NoticeMatchService {
         noticeUpdateProducer.sendNoticeStatusUpdate(match.getLostNoticeId(), NoticeStatus.RESOLVED);
         noticeUpdateProducer.sendNoticeStatusUpdate(match.getSeenNoticeId(), NoticeStatus.RESOLVED);
 
+        noticeUpdateProducer.sendMapNoticeStatusUpdate(match.getLostNoticeId(), NoticeStatus.RESOLVED);
+        noticeUpdateProducer.sendMapNoticeStatusUpdate(match.getSeenNoticeId(), NoticeStatus.RESOLVED);
+
         matchDecisionProducer.notifyMatchConfirmed(match);
         log.info("Dopasowanie {} potwierdzone przez użytkownika {}", matchId, requestingUserId);
         return match;
@@ -101,6 +104,9 @@ public class NoticeMatchService {
 
         noticeUpdateProducer.sendNoticeStatusUpdate(match.getLostNoticeId(), NoticeStatus.ACTIVE);
         noticeUpdateProducer.sendNoticeStatusUpdate(match.getSeenNoticeId(), NoticeStatus.ACTIVE);
+
+        noticeUpdateProducer.sendMapNoticeStatusUpdate(match.getLostNoticeId(), NoticeStatus.ACTIVE);
+        noticeUpdateProducer.sendMapNoticeStatusUpdate(match.getSeenNoticeId(), NoticeStatus.ACTIVE);
 
         matchDecisionProducer.notifyMatchRejected(match);
         log.info("Dopasowanie {} odrzucone przez użytkownika {}", matchId, requestingUserId);
