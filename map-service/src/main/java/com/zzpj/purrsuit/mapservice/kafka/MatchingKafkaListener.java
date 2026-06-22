@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Component;
 public class MatchingKafkaListener {
     private final GeoLocationRepository repository;
 
+    @Transactional // Dodaj tę adnotację
     @KafkaListener(topics = "match-found-map", groupId = "map-service-group")
     public void consumeMatchEvent(MatchFoundNoticeEvent event) {
         log.info("Otrzymano MatchFoundNoticeEvent z Kafki. Aktualizacja statusów dla lost={}, seen={}",

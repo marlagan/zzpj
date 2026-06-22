@@ -1,7 +1,7 @@
 package com.zzpj.purrsuit.noticeservice.kafka;
 
 import com.zzpj.purrsuit.common.events.NoticeStatusUpdateEvent;
-import com.zzpj.purrsuit.noticeservice.domain.NoticeStatus;
+import com.zzpj.purrsuit.common.events.NoticeStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
