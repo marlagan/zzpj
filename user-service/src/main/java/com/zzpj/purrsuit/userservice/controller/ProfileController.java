@@ -4,6 +4,7 @@ import com.zzpj.purrsuit.userservice.dto.PasswordChangeDTO;
 import com.zzpj.purrsuit.userservice.dto.UserRegistrationDTO;
 import com.zzpj.purrsuit.userservice.entity.User;
 import com.zzpj.purrsuit.userservice.enums.RoleName;
+import com.zzpj.purrsuit.userservice.kafka.UserProfileKafkaProducer;
 import com.zzpj.purrsuit.userservice.service.KeycloakAuthService;
 import com.zzpj.purrsuit.userservice.service.UserService;
 import jakarta.validation.Valid;
@@ -26,6 +27,7 @@ public class ProfileController {
 
     private final UserService userService;
     private final KeycloakAuthService keycloakAuthService;
+    private final UserProfileKafkaProducer userProfileKafkaProducer;
 
     @PostMapping("/sync-profile")
     public ResponseEntity<User> syncProfileWithKeycloak(@AuthenticationPrincipal Jwt jwt) {
@@ -43,6 +45,7 @@ public class ProfileController {
         dto.setRoleName(role);
 
         User user = userService.registerOrUpdateUser(dto);
+        userProfileKafkaProducer.sendUserProfile(user);
         return ResponseEntity.ok(user);
     }
 

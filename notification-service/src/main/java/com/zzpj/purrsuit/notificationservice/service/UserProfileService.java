@@ -1,6 +1,6 @@
 package com.zzpj.purrsuit.notificationservice.service;
 
-import com.zzpj.purrsuit.notificationservice.dto.UserProfileEvent;
+import com.zzpj.purrsuit.common.events.UserProfileEvent;
 import com.zzpj.purrsuit.notificationservice.entity.UserProfile;
 import com.zzpj.purrsuit.notificationservice.repository.UserProfileRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,7 @@ public class UserProfileService {
 
     public void save(UserProfileEvent event) {
         UserProfile profile = UserProfile.builder()
-                .userId(event.id())
+                .userId(event.userId())
                 .email(event.email())
                 .firstName(event.firstName())
                 .lastName(event.lastName())

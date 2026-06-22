@@ -36,8 +36,9 @@ public class NotificationService {
 
         // wyślij powiadomienie przez websocket (to user x)
         NotificationDTO dto = toDTO(saved);
-        messagingTemplate.convertAndSend(
-                "/topic/notifications/" + saved.getUserId(),
+        messagingTemplate.convertAndSendToUser(
+                saved.getUserId().toString(),
+                "/queue/notifications/" + saved.getUserId(),
                 dto
         );
 
