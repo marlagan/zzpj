@@ -16,6 +16,10 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/**
+ * Główny serwis domenowy odpowiedzialny za logikę przestrzenną (GIS).
+ * Przetwarza geometrie (JTS Topology Suite) i wylicza dopasowania ogłoszeń.
+ */
 @Service
 @RequiredArgsConstructor
 public class LocationMatchingService {
@@ -39,11 +43,30 @@ public class LocationMatchingService {
         return repository.save(location);
     }
 
+    /**
+     * Oblicza dynamiczny promień poszukiwań na podstawie biologii gatunku i czasu.
+     * Dla kotów przyjmuje się mniejszą mobilność (1km/dzień), dla psów i innych większą (5km/dzień).
+     *
+     * @param species     Gatunek zwierzęcia (np. "CAT", "DOG"). Ignoruje wielkość liter.
+     * @param daysMissing Liczba dni od momentu zaginięcia.
+     * @return Zasięg poszukiwań wyrażony w <b>metrach</b>.
+     */
     public double calculateSearchRadius(String species, int daysMissing) {
         double baseRadiusKm = "CAT".equalsIgnoreCase(species) ? 1.0 : 5.0;
         return baseRadiusKm * daysMissing * 1000.0;
     }
 
+    /**
+     * Znajduje ogłoszenia potencjalnie powiązane z podanym ogłoszeniem źródłowym,
+     * opierając się na odległości geograficznej i wyliczonym promieniu.
+     * Asynchronicznie publikuje event na Kafkę z listą dopasowanych identyfikatorów.
+     *
+     * @param noticeId    ID ogłoszenia źródłowego, względem którego szukamy dopasowań.
+     * @param species     Gatunek zwierzęcia dla ogłoszenia źródłowego.
+     * @param daysMissing Liczba dni od zaginięcia do kalkulacji promienia.
+     * @return Lista obiektów {@link GeoLocation} pasujących do kryteriów.
+     * @throws IllegalArgumentException jeśli podane noticeId nie istnieje w bazie.
+     */
     public List<GeoLocation> findMatchesForNotice(UUID noticeId, String species, int daysMissing) {
         GeoLocation originNotice = repository.findByNoticeId(noticeId)
                 .orElseThrow(() -> new IllegalArgumentException("Notice location not found in database"));
@@ -72,6 +95,14 @@ public class LocationMatchingService {
         return repository.findWithinRadius(lat, lon, radiusKm * 1000.0);
     }
 
+    /**
+     * Wyszukuje lokalizacje wewnątrz dynamicznego wielokąta zdefiniowanego przez użytkownika.
+     * Automatycznie domyka niezamknięte wielokąty przed wysłaniem zapytania do bazy PostGIS.
+     *
+     * @param request Obiekt zawierający wierzchołki wielokąta oraz opcjonalne filtry.
+     * @return Lista lokalizacji znajdujących się geometrycznie wewnątrz obszaru.
+     * @throws IllegalArgumentException jeśli wielokąt ma mniej niż 3 wierzchołki.
+     */
     public List<GeoLocation> findMatchesWithinArea(AreaSearchRequest request) {
         List<PointDto> points = request.polygonPoints();
 
