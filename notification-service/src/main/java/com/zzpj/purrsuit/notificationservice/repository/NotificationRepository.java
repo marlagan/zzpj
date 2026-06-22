@@ -5,7 +5,6 @@ import com.zzpj.purrsuit.notificationservice.enums.NotificationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -16,6 +15,6 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
     //List<Notification> findByUSerIdOrderByCreatedAtAfter(UUID userId, LocalDateTime date);
     List<Notification> findByUserIdAndStatus(UUID userId, NotificationStatus status);
 
-    long countByUserId(UUID userId);
+    long countByUserIdAndStatus(UUID userId, NotificationStatus status);
 }
 //Todo: modifying? status?
