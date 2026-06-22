@@ -31,4 +31,17 @@ public class NoticeUpdateProducer {
             log.error("Failed to publish to Kafka topic={} key={}", TOPIC_NOTICE_UPDATE, noticeId, e);
         }
     }
+
+    static final String TOPIC_NOTICE_UPDATE_MAP = "notice-update-map";
+
+    public void sendMapNoticeStatusUpdate(UUID noticeId, NoticeStatus newStatus) {
+        try {
+            var event = new NoticeStatusUpdateEvent(noticeId, newStatus.toString());
+            kafkaNoticeUpdateTemplate.send(TOPIC_NOTICE_UPDATE_MAP, noticeId.toString(), event);
+            log.info("Kafka [{}] key={} newStatus={}", TOPIC_NOTICE_UPDATE_MAP, noticeId, newStatus);
+        } catch (Exception e) {
+            log.error("Failed to publish to Kafka topic={} key={}", TOPIC_NOTICE_UPDATE_MAP, noticeId, e);
+        }
+    }
+
 }
