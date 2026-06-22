@@ -8,6 +8,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+/**
+ * Serwis odpowiedzialny za integrację z zewnętrznym API Nominatim (OpenStreetMap).
+ * Służy do geokodowania (zamiany tekstowego adresu na współrzędne geograficzne).
+ * <p>
+ * UWAGA: Serwis korzysta z publicznego API, które wymaga podania poprawnego nagłówka
+ * {@code User-Agent} z adresem e-mail. W przeciwnym razie żądania zostaną odrzucone (HTTP 403).
+ * Wartości te są wstrzykiwane z konfiguracji (właściwość {@code osm.email}).
+ * </p>
+ */
 @Service
 public class OpenStreetMapService {
 
@@ -23,6 +32,17 @@ public class OpenStreetMapService {
                 .build();
     }
 
+    /**
+     * Tłumaczy wprowadzony przez użytkownika adres na dokładne współrzędne geograficzne.
+     * Zapytanie jest limitowane do 1 wyniku (najwyższa trafność).
+     *
+     * @param address Tekstowy adres, np. "Piotrkowska 10, Łódź" lub "Warszawa".
+     * @return {@link GeocodingResult} reprezentujący zapieczętowany interfejs:
+     * <ul>
+     * <li>{@link Success} zawierający obiekt {@link LocationDto} ze współrzędnymi.</li>
+     * <li>{@link Failure} zawierający powód błędu (np. brak adresu lub błąd połączenia).</li>
+     * </ul>
+     */
     public GeocodingResult geocodeAddress(String address) {
         try {
             // Local-Variable Type Inference (var)
