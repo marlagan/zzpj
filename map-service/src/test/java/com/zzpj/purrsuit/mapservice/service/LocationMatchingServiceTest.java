@@ -1,5 +1,7 @@
 package com.zzpj.purrsuit.mapservice.service;
 
+import com.zzpj.purrsuit.mapservice.domain.AreaSearchRequest;
+import com.zzpj.purrsuit.mapservice.domain.PointDto;
 import com.zzpj.purrsuit.mapservice.entity.GeoLocation;
 import com.zzpj.purrsuit.common.events.NoticeStatus;
 import com.zzpj.purrsuit.mapservice.repository.GeoLocationRepository;
@@ -145,5 +147,100 @@ class LocationMatchingServiceTest {
         assertThatThrownBy(() -> service.findMatchesForNotice(noticeId, "DOG", 1))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Notice location not found in database");
+    }
+
+    @Test
+    void shouldReturnEmptyKafkaMessageWhenNoOtherMatchesFound() {
+        // given
+        UUID originNoticeId = UUID.randomUUID();
+        Point originPoint = geometryFactory.createPoint(new Coordinate(19.4559, 51.7592));
+
+        GeoLocation originLocation = GeoLocation.builder()
+                .noticeId(originNoticeId)
+                .location(originPoint)
+                .species("CAT")
+                .noticeStatus(NoticeStatus.ACTIVE)
+                .build();
+
+        when(repository.findByNoticeId(originNoticeId)).thenReturn(Optional.of(originLocation));
+
+        // Zwracamy z bazy TYLKO oryginalną lokację (brak innych zwierząt w pobliżu)
+        when(repository.findWithinRadiusAndCriteria(
+                anyDouble(), anyDouble(), anyDouble(), any(), any()))
+                .thenReturn(List.of(originLocation));
+
+        // when
+        List<GeoLocation> matches = service.findMatchesForNotice(originNoticeId, "CAT", 2);
+
+        // then
+        assertThat(matches).hasSize(1);
+
+        verify(kafkaProducer).sendNearbyNotices(eq(originNoticeId), listCaptor.capture());
+
+        List<UUID> sentIds = listCaptor.getValue();
+        // Sprawdzamy, czy do Kafki wysłano pustą listę (bo id równe originNoticeId zostało odfiltrowane)
+        assertThat(sentIds).isEmpty();
+    }
+
+    @Test
+    void shouldGetLocationsNear() {
+        // given
+        double lat = 51.7592;
+        double lon = 19.4559;
+        double radiusKm = 2.0;
+
+        GeoLocation location = GeoLocation.builder().noticeId(UUID.randomUUID()).build();
+
+        // Zauważ, że serwis mnoży promień * 1000.0
+        when(repository.findWithinRadius(lat, lon, 2000.0)).thenReturn(List.of(location));
+
+        // when
+        List<GeoLocation> result = service.getLocationsNear(lat, lon, radiusKm);
+
+        // then
+        assertThat(result).hasSize(1);
+        verify(repository).findWithinRadius(lat, lon, 2000.0);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenAreaHasLessThanThreePoints() {
+        // given
+        // Tworzymy zapytanie, które ma tylko 2 punkty
+        List<PointDto> points = List.of(
+                new PointDto(51.75, 19.45),
+                new PointDto(51.76, 19.46)
+        );
+        AreaSearchRequest request = new AreaSearchRequest(points, "CAT", "LOST");
+
+        // when & then
+        assertThatThrownBy(() -> service.findMatchesWithinArea(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Wielokąt obszaru musi składać się z co najmniej 3 punktów.");
+    }
+
+    @Test
+    void shouldFindMatchesWithinArea() {
+        // given
+        // Tworzymy kwadrat z 4 punktów
+        List<PointDto> points = List.of(
+                new PointDto(51.0, 19.0),
+                new PointDto(51.0, 20.0),
+                new PointDto(52.0, 20.0),
+                new PointDto(52.0, 19.0)
+        );
+        AreaSearchRequest request = new AreaSearchRequest(points, "DOG", "FOUND");
+
+        GeoLocation location = GeoLocation.builder().noticeId(UUID.randomUUID()).build();
+
+        // Używamy anyString(), ponieważ dokładny format WKT z JTS zależy od wewnętrznej implementacji biblioteki
+        when(repository.findWithinPolygon(anyString(), eq("DOG"), eq("FOUND")))
+                .thenReturn(List.of(location));
+
+        // when
+        List<GeoLocation> result = service.findMatchesWithinArea(request);
+
+        // then
+        assertThat(result).hasSize(1);
+        verify(repository).findWithinPolygon(anyString(), eq("DOG"), eq("FOUND"));
     }
 }
