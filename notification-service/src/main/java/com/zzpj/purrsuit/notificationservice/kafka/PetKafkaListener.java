@@ -1,7 +1,7 @@
 package com.zzpj.purrsuit.notificationservice.kafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.zzpj.purrsuit.notificationservice.dto.MatchResultEvent;
+import com.zzpj.purrsuit.common.events.MatchResultEvent;
 import com.zzpj.purrsuit.notificationservice.dto.PetNotificationDTO;
 import com.zzpj.purrsuit.notificationservice.entity.Notification;
 import com.zzpj.purrsuit.notificationservice.entity.UserProfile;
@@ -34,15 +34,15 @@ public class PetKafkaListener {
         try {
             MatchResultEvent event = objectMapper.readValue(message, MatchResultEvent.class);
 
-            UserProfile profile = userProfileService.get(event.lostOwnerId())
+            UserProfile profile = userProfileService.get(event.userId())
                     .orElseThrow(() -> new IllegalStateException(
-                            "Brak profilu użytkownika w bazie dla userId=" + event.lostOwnerId()
+                            "Brak profilu użytkownika w bazie dla userId=" + event.userId()
                                     + " — profil nie został jeszcze zsynchronizowany"));
 
             PetNotificationDTO petNotificationDTO = petServiceClient.getNotification(event.lostNoticeId());
 
             Notification notification = Notification.builder()
-                    .userId(event.lostOwnerId())
+                    .userId(event.userId())
                     .title("Znaleźliśmy potencjalne dopasowanie!")
                     .message("Znaleziono zwierzę podobne do Twojego. Podobieństwo: "
                             + Math.round(event.similarityScore() * 100) + "%")
@@ -62,7 +62,7 @@ public class PetKafkaListener {
                     variables
             );
 
-            log.info("Powiadomienie zapisane do bazy i email wysłany dla userId={}", event.lostOwnerId());
+            log.info("Powiadomienie zapisane do bazy i email wysłany dla userId={}", event.userId());
         } catch (Exception e) {
             log.error("Błąd podczas przetwarzania eventu: {}", message, e);
         }

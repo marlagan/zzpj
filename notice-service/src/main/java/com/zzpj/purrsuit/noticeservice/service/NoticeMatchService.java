@@ -2,7 +2,7 @@ package com.zzpj.purrsuit.noticeservice.service;
 
 import com.zzpj.purrsuit.common.events.MatchResultEvent;
 import com.zzpj.purrsuit.noticeservice.domain.MatchStatus;
-import com.zzpj.purrsuit.noticeservice.domain.NoticeStatus;
+import com.zzpj.purrsuit.common.events.NoticeStatus;
 import com.zzpj.purrsuit.noticeservice.entity.Notice;
 import com.zzpj.purrsuit.noticeservice.entity.NoticeMatch;
 import com.zzpj.purrsuit.noticeservice.kafka.MatchDecisionProducer;
