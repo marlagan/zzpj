@@ -29,4 +29,10 @@ public class GlobalExceptionHandler {
         log.warn("Conflict: {}", ex.getMessage());
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     }
+
+    @ExceptionHandler(SecurityException.class)
+    public ProblemDetail handleForbidden(SecurityException ex) {
+        log.warn("Forbidden: {}", ex.getMessage());
+        return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
+    }
 }

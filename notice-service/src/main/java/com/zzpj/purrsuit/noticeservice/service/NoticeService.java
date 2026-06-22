@@ -1,6 +1,6 @@
 package com.zzpj.purrsuit.noticeservice.service;
 
-import com.zzpj.purrsuit.common.events.NoticeStatus;
+import com.zzpj.purrsuit.noticeservice.domain.NoticeStatus;
 import com.zzpj.purrsuit.noticeservice.domain.NoticeType;
 import com.zzpj.purrsuit.noticeservice.dto.NoticeDto.*;
 import com.zzpj.purrsuit.noticeservice.entity.Notice;
@@ -36,12 +36,15 @@ public class NoticeService {
      * Groq generuje opis z danych formularza → zapisywany w aiGeneratedDescription.
      * Ogłoszenie od razu wchodzi jako ACTIVE.
      * Po zapisie: Kafka event → pet-service + rejestracja lokalizacji w map-service.
+     *
+     * @param reportedByUserId UUID zalogowanego użytkownika pobrany z tokenu JWT
+     *                         (NoticeController#createNotice) — nigdy z requestu klienta.
      */
     @Transactional
-    public NoticeResponse createNotice(CreateNoticeRequest req) {
+    public NoticeResponse createNotice(CreateNoticeRequest req, UUID reportedByUserId) {
         Notice notice = Notice.builder()
                 .type(req.type)
-                .reportedByUserId(req.reportedByUserId)
+                .reportedByUserId(reportedByUserId)
                 .species(req.species)
                 .breed(req.breed)
                 .colorDescription(req.colorDescription)
@@ -124,17 +127,14 @@ public class NoticeService {
                 n.getReportedByUserId(),
                 n.getSpecies(),
                 resolveDescription(n),
-                n.getType(),
-                n.getStatus());
+                n.getType());
 
         // Event 2 → map-service: noticeId + typ + lokalizacja + data utworzenia
         eventProducer.sendLocationEvent(
                 n.getId(),
                 n.getType(),
                 n.getLocation(),
-                n.getCreatedAt(),
-                n.getStatus(),
-                n.getSpecies());
+                n.getCreatedAt());
     }
 
     NoticeResponse toResponse(Notice n) {
