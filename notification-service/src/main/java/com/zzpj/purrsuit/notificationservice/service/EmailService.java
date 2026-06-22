@@ -18,21 +18,16 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class EmailService {
 
-    private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
 
     public void sendEmail(String to, String subject, String body) {
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(to);
-            message.setSubject(subject);
-            message.setText(body);
-            message.setFrom("noreply@purrsuit.com");
-            mailSender.send(message);
-            log.info("Email sent to: {}", to);
-        } catch (Exception e) {
-            log.error("Failed to send email to: {}", to, e);
-        }
+        log.info("\n" +
+                "================== SYMULACJA WYSYŁKI EMAIL ==================\n" +
+                "Do: {}\n" +
+                "Temat: {}\n" +
+                "Treść:\n{}\n" +
+                "=============================================================",
+                to, subject, body);
     }
 
     public void sendTemplatedEmail(String to, String subject,
@@ -42,16 +37,16 @@ public class EmailService {
             context.setVariables(variables);
             String htmlContent = templateEngine.process(templateName, context);
 
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setTo(to);
-            helper.setSubject(subject);
-            helper.setText(htmlContent, true);
-            helper.setFrom("noreply@purrsuit.com");
-
-            mailSender.send(message);
+            log.info("\n" +
+                    "============== SYMULACJA WYSYŁKI EMAIL (SZABLON) ==============\n" +
+                    "Do: {}\n" +
+                    "Temat: {}\n" +
+                    "Szablon: {}\n" +
+                    "Treść HTML:\n{}\n" +
+                    "===============================================================",
+                    to, subject, templateName, htmlContent);
             log.info("Templated email sent to: {}", to);
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             log.error("Failed to send templated email to: {}", to, e);
         }
     }

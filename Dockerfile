@@ -6,7 +6,7 @@ COPY . .
 # Przekazujemy nazwę modułu, który chcemy zbudować (np. map-service)
 ARG MODULE_NAME
 # Kompilujemy tylko wybrany moduł i to, od czego zależy (-am)
-RUN mvn clean package -pl ${MODULE_NAME} -am -DskipTests
+RUN --mount=type=cache,target=/root/.m2 mvn clean package -pl ${MODULE_NAME} -am -DskipTests
 
 # ETAP 2: Uruchamianie
 FROM eclipse-temurin:21-jre-jammy

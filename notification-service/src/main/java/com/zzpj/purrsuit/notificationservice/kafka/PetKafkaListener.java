@@ -39,8 +39,6 @@ public class PetKafkaListener {
                             "Brak profilu użytkownika w bazie dla userId=" + event.userId()
                                     + " — profil nie został jeszcze zsynchronizowany"));
 
-            PetNotificationDTO petNotificationDTO = petServiceClient.getNotification(event.lostNoticeId());
-
             Notification notification = Notification.builder()
                     .userId(event.userId())
                     .title("Znaleźliśmy potencjalne dopasowanie!")
@@ -53,7 +51,6 @@ public class PetKafkaListener {
 
             Map<String, Object> variables = new HashMap<>();
             variables.put("ownerName", profile.getFirstName());
-            variables.put("petName", petNotificationDTO.getSpecies());
 
             emailService.sendTemplatedEmail(
                     profile.getEmail(),
