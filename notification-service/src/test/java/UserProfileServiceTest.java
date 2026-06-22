@@ -1,4 +1,4 @@
-import com.zzpj.purrsuit.notificationservice.dto.UserProfileEvent;
+import com.zzpj.purrsuit.common.events.UserProfileEvent;
 import com.zzpj.purrsuit.notificationservice.entity.UserProfile;
 import com.zzpj.purrsuit.notificationservice.repository.UserProfileRepository;
 import com.zzpj.purrsuit.notificationservice.service.UserProfileService;

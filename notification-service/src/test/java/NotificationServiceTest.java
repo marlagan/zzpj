@@ -84,7 +84,13 @@ class NotificationServiceTest {
 
     @Test
     void save_ShouldPersistNotificationAndReturnIt() {
-        Notification notification = Notification.builder().message("Test").build();
+        UUID testUserId = UUID.randomUUID();
+
+        Notification notification = Notification.builder()
+                .userId(testUserId)
+                .message("Test")
+                .build();
+
         when(notificationRepository.save(notification)).thenReturn(notification);
 
         Notification saved = notificationService.save(notification);
@@ -92,5 +98,10 @@ class NotificationServiceTest {
         assertNotNull(saved);
         assertEquals("Test", saved.getMessage());
         verify(notificationRepository, times(1)).save(notification);
+        verify(messagingTemplate, times(1)).convertAndSendToUser(
+                eq(testUserId.toString()),
+                eq("/queue/notifications/" + testUserId),
+                any(NotificationDTO.class)
+        );
     }
 }

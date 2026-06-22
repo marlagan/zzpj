@@ -45,7 +45,7 @@ public class NotificationController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/test-email")
+    @GetMapping(value = "/test-email", produces = "text/plain;charset=UTF-8")
     public ResponseEntity<String> testEmail() {
         emailService.sendEmail(
                 "test@test.com",

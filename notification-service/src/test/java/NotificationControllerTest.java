@@ -12,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.filter.CharacterEncodingFilter;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -39,9 +40,10 @@ class NotificationControllerTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(notificationController).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(notificationController)
+                .addFilter(new CharacterEncodingFilter("UTF-8", true))
+                .build();
     }
-
     @Test
     void getNotifications_ShouldReturnListAndStatus200_WhenHeaderIsPresent() throws Exception {
         NotificationDTO dto = NotificationDTO.builder()
