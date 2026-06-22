@@ -2,8 +2,10 @@ package com.zzpj.purrsuit.petservice.service;
 
 import com.zzpj.purrsuit.common.events.NoticeCreatedEvent;
 import com.zzpj.purrsuit.common.events.NoticeStatus;
+import com.zzpj.purrsuit.common.events.NoticeStatusUpdateEvent;
 import com.zzpj.purrsuit.petservice.entity.PetNotice;
 import com.zzpj.purrsuit.petservice.enums.MatchStatus;
+import com.zzpj.purrsuit.petservice.kafka.MatchFoundNoticeProducer;
 import com.zzpj.purrsuit.petservice.kafka.MatchResultProducer;
 import com.zzpj.purrsuit.petservice.entity.MatchResult;
 import com.zzpj.purrsuit.petservice.repository.MatchResultRepository;
@@ -47,6 +49,9 @@ class MatchingServiceTest {
 
     @InjectMocks
     private MatchingService matchingService;
+
+    @Mock
+    private MatchFoundNoticeProducer matchFoundNoticeProducer;
 
     private final UUID newNoticeId = UUID.randomUUID();
     private final UUID candidateId = UUID.randomUUID();
@@ -98,6 +103,36 @@ class MatchingServiceTest {
         assertEquals(MatchStatus.PENDING, savedResult.getStatus());
 
         verify(matchResultProducer, times(1)).sendMatchNotification(any(MatchResult.class));
+    }
+    @Test
+    void handleIncomingNotice_shouldSaveNoticeAndCreateMatch_whenScoreIsAboveThreshold() {
+
+        UUID noticeId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
+        NoticeCreatedEvent event = new NoticeCreatedEvent(noticeId, userId, "Pies", "Czarny labrador", "LOST", NoticeStatus.ACTIVE);
+
+        UUID candidateId = UUID.randomUUID();
+        PetNotice activeCandidate = PetNotice.builder()
+                .noticeId(candidateId)
+                .type("FOUND")
+                .species("Pies")
+                .description("Znaleziono czarnego labradora")
+                .status("ACTIVE")
+                .build();
+
+        when(petNoticeRepository.findByTypeAndSpecies("FOUND", "Pies")).thenReturn(List.of(activeCandidate));
+        when(semanticMatchService.comparePetDescription(any(), any())).thenReturn(0.85); // 0.85 >= 0.75
+        when(matchResultRepository.save(any(MatchResult.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        matchingService.handleIncomingNotice(event);
+
+        verify(petNoticeRepository).save(argThat(notice ->
+                notice.getNoticeId().equals(noticeId) && "ACTIVE".equals(notice.getStatus())
+        ));
+        verify(matchResultRepository).save(any(MatchResult.class));
+        verify(matchResultProducer).sendMatchNotification(any(MatchResult.class));
+        verify(matchFoundNoticeProducer).sendFoundMatchNotice(any(MatchResult.class));
     }
 
     @Test
@@ -169,4 +204,90 @@ class MatchingServiceTest {
         assertTrue(actualResult.isPresent());
         assertEquals(matchResult, actualResult.get());
     }
+
+    @Test
+    void updateNoticeStatus_shouldUpdateStatus_whenNoticeExists() {
+        // given
+        UUID noticeId = UUID.randomUUID();
+        NoticeStatusUpdateEvent event = new NoticeStatusUpdateEvent(noticeId, "RESOLVED");
+        PetNotice existingNotice = PetNotice.builder()
+                .noticeId(noticeId)
+                .status("ACTIVE")
+                .build();
+
+        when(petNoticeRepository.findById(noticeId)).thenReturn(Optional.of(existingNotice));
+
+        matchingService.updateNoticeStatus(event);
+
+        assertEquals("RESOLVED", existingNotice.getStatus());
+        verify(petNoticeRepository).save(existingNotice);
+    }
+
+    @Test
+    void processLocationMatchEvent_shouldCreateMatch_whenValidCandidateAndNoDuplicateExists() {
+        UUID sourceId = UUID.randomUUID();
+        UUID candidateId = UUID.randomUUID();
+        List<UUID> nearbyIds = List.of(candidateId);
+
+        PetNotice sourceNotice = PetNotice.builder()
+                .noticeId(sourceId)
+                .type("LOST")
+                .species("Pies")
+                .status("ACTIVE")
+                .description("Zgubiono mopsa")
+                .build();
+
+        PetNotice candidateNotice = PetNotice.builder()
+                .noticeId(candidateId)
+                .type("FOUND")
+                .species("Pies")
+                .status("PENDING")
+                .description("Znaleziono małego mopsa")
+                .build();
+
+        when(petNoticeRepository.findById(sourceId)).thenReturn(Optional.of(sourceNotice));
+        when(petNoticeRepository.findAllById(nearbyIds)).thenReturn(List.of(candidateNotice));
+        when(matchResultRepository.findByLostNoticeIdAndSeenNoticeId(sourceId, candidateId)).thenReturn(Optional.empty());
+        when(semanticMatchService.comparePetDescription(any(), any())).thenReturn(0.95);
+        when(matchResultRepository.save(any(MatchResult.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        matchingService.processLocationMatchEvent(sourceId, nearbyIds);
+
+        verify(matchResultProducer).sendMatchNotification(any(MatchResult.class));
+    }
+
+    @Test
+    void processLocationMatchEvent_shouldSkip_whenMatchAlreadyExistsInDatabase() {
+        UUID sourceId = UUID.randomUUID();
+        UUID candidateId = UUID.randomUUID();
+        List<UUID> nearbyIds = List.of(candidateId);
+
+        PetNotice sourceNotice = PetNotice.builder()
+                .noticeId(sourceId)
+                .type("LOST")
+                .species("Pies")
+                .status("ACTIVE")
+                .build();
+
+        PetNotice candidateNotice = PetNotice.builder()
+                .noticeId(candidateId)
+                .type("FOUND")
+                .species("Pies")
+                .status("ACTIVE")
+                .build();
+
+        when(petNoticeRepository.findById(sourceId)).thenReturn(Optional.of(sourceNotice));
+        when(petNoticeRepository.findAllById(nearbyIds)).thenReturn(List.of(candidateNotice));
+
+        when(matchResultRepository.findByLostNoticeIdAndSeenNoticeId(sourceId, candidateId))
+                .thenReturn(Optional.of(new MatchResult()));
+
+        matchingService.processLocationMatchEvent(sourceId, nearbyIds);
+
+        verifyNoInteractions(semanticMatchService);
+        verify(matchResultRepository, never()).save(any());
+        verifyNoInteractions(matchResultProducer);
+    }
+
+
 }
