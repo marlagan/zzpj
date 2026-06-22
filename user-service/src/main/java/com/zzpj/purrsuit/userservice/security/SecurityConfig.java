@@ -20,7 +20,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/users/public/**").permitAll()
                 .requestMatchers("/api/users/users/*/email").permitAll()
-                .requestMatchers("/public/**", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
+                    .requestMatchers("/public/**", "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));

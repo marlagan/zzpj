@@ -13,12 +13,13 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // Wyłączenie ochrony CSRF dla API stanowego/bezsesyjnego
-            .authorizeHttpRequests(auth -> auth
-                .anyRequest().authenticated() // Każde żądanie musi być zalogowane
-            )
-            .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {})); // Włączenie obsługi tokenów JWT z application.yml
-        
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {}));
+
         return http.build();
     }
 }
