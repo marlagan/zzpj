@@ -1,5 +1,6 @@
 package com.zzpj.purrsuit.mapservice.controller;
 
+import com.zzpj.purrsuit.common.events.NoticeStatus;
 import com.zzpj.purrsuit.mapservice.domain.Failure;
 import com.zzpj.purrsuit.mapservice.domain.LocationDto;
 import com.zzpj.purrsuit.mapservice.domain.SaveLocationRequest;
@@ -84,10 +85,10 @@ class MapControllerTest {
     void shouldSaveLocation() {
         // given
         UUID noticeId = UUID.randomUUID();
-        SaveLocationRequest request = new SaveLocationRequest(noticeId, "FOUND", 51.0, 19.0, 10.0);
+        SaveLocationRequest request = new SaveLocationRequest(noticeId, "FOUND", "cat",51.0, 19.0, 10.0, NoticeStatus.ACTIVE);
         GeoLocation mockGeoLocation = GeoLocation.builder().noticeId(noticeId).build();
 
-        when(locationService.save(noticeId, "FOUND", 51.0, 19.0, 10.0)).thenReturn(mockGeoLocation);
+        when(locationService.save(noticeId, "FOUND", "cat",51.0, 19.0, 10.0, NoticeStatus.ACTIVE)).thenReturn(mockGeoLocation);
 
         // when
         ResponseEntity<GeoLocation> response = controller.saveLocation(request);
@@ -95,7 +96,7 @@ class MapControllerTest {
         // then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isEqualTo(mockGeoLocation);
-        verify(locationService).save(noticeId, "FOUND", 51.0, 19.0, 10.0);
+        verify(locationService).save(noticeId, "FOUND", "cat",51.0, 19.0, 10.0, NoticeStatus.ACTIVE);
     }
 
     @Test

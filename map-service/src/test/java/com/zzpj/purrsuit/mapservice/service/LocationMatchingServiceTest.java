@@ -10,6 +10,7 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.PrecisionModel;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -34,6 +35,9 @@ class LocationMatchingServiceTest {
 
     @InjectMocks
     private LocationMatchingService service;
+
+    @Captor
+    private ArgumentCaptor<List<UUID>> listCaptor;
 
     private final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
 
@@ -101,26 +105,29 @@ class LocationMatchingServiceTest {
 
         Point originPoint = geometryFactory.createPoint(new Coordinate(19.4559, 51.7592));
         GeoLocation originLocation = GeoLocation.builder()
-                .noticeId(originNoticeId)
-                .location(originPoint)
-                .build();
+        .noticeId(originNoticeId)
+        .location(originPoint)
+        .species("CAT") // <-- Dodaj gatunek
+        .noticeStatus(NoticeStatus.ACTIVE) // <-- Dodaj status (jeśli serwis tego wymaga)
+        .build();
 
         GeoLocation nearbyLocation = GeoLocation.builder()
-                .noticeId(nearbyNoticeId)
-                .build();
+        .noticeId(nearbyNoticeId)
+        .species("CAT") // <-- Dodaj gatunek
+        .noticeStatus(NoticeStatus.ACTIVE)
+        .build();
 
         when(repository.findByNoticeId(originNoticeId)).thenReturn(Optional.of(originLocation));
-        when(repository.findWithinRadius(eq(51.7592), eq(19.4559), anyDouble()))
-                .thenReturn(List.of(originLocation, nearbyLocation)); // Zwraca siebie i inny obiekt
-
+        when(repository.findWithinRadiusAndCriteria(
+                anyDouble(), anyDouble(), anyDouble(), any(), any()))
+                .thenReturn(List.of(originLocation, nearbyLocation));
         // when
         List<GeoLocation> matches = service.findMatchesForNotice(originNoticeId, "CAT", 2);
 
         // then
-        assertThat(matches).hasSize(2); // Zgodnie z tym co zwraca mock
+        assertThat(matches  ).hasSize(2); // Zgodnie z tym co zwraca mock
 
         // Sprawdzamy, czy do Kafki wysłano tylko INNE ID (bez originNoticeId)
-        ArgumentCaptor<List<UUID>> listCaptor = ArgumentCaptor.forClass(List.class);
         verify(kafkaProducer).sendNearbyNotices(eq(originNoticeId), listCaptor.capture());
 
         List<UUID> sentIds = listCaptor.getValue();
