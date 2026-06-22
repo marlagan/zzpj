@@ -1,16 +1,13 @@
 package com.zzpj.purrsuit.notificationservice.kafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.zzpj.purrsuit.common.events.MatchResultEvent;
-import com.zzpj.purrsuit.common.events.UserProfileEvent;
+import com.zzpj.purrsuit.notificationservice.dto.MatchResultEvent;
 import com.zzpj.purrsuit.notificationservice.dto.PetNotificationDTO;
 import com.zzpj.purrsuit.notificationservice.entity.Notification;
+import com.zzpj.purrsuit.notificationservice.entity.UserProfile;
 import com.zzpj.purrsuit.notificationservice.enums.NotificationChannel;
 import com.zzpj.purrsuit.notificationservice.enums.NotificationType;
-import com.zzpj.purrsuit.notificationservice.service.EmailService;
-import com.zzpj.purrsuit.notificationservice.service.NotificationService;
-import com.zzpj.purrsuit.notificationservice.service.PetServiceClient;
-import com.zzpj.purrsuit.notificationservice.service.UserProfileCache;
+import com.zzpj.purrsuit.notificationservice.service.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -27,7 +24,7 @@ public class PetKafkaListener {
     private final EmailService emailService;
     private final NotificationService notificationService;
     private final ObjectMapper objectMapper;
-    private final UserProfileCache userProfileCache;
+    private final UserProfileService userProfileService;
     private final PetServiceClient petServiceClient;
 
     @KafkaListener(topics = "pet-match-results", groupId = "purrsuit-group")
@@ -37,15 +34,15 @@ public class PetKafkaListener {
         try {
             MatchResultEvent event = objectMapper.readValue(message, MatchResultEvent.class);
 
-            UserProfileEvent profile = userProfileCache.get(event.userId())
+            UserProfile profile = userProfileService.get(event.lostOwnerId())
                     .orElseThrow(() -> new IllegalStateException(
-                            "Brak profilu użytkownika w cache dla userId=" + event.userId()
-                                    + " — użytkownik musi się zalogować (sync-profile)"));
+                            "Brak profilu użytkownika w bazie dla userId=" + event.lostOwnerId()
+                                    + " — profil nie został jeszcze zsynchronizowany"));
 
             PetNotificationDTO petNotificationDTO = petServiceClient.getNotification(event.lostNoticeId());
 
             Notification notification = Notification.builder()
-                    .userId(event.userId())
+                    .userId(event.lostOwnerId())
                     .title("Znaleźliśmy potencjalne dopasowanie!")
                     .message("Znaleziono zwierzę podobne do Twojego. Podobieństwo: "
                             + Math.round(event.similarityScore() * 100) + "%")
@@ -55,17 +52,17 @@ public class PetKafkaListener {
             notificationService.save(notification);
 
             Map<String, Object> variables = new HashMap<>();
-            variables.put("ownerName", profile.firstName());
+            variables.put("ownerName", profile.getFirstName());
             variables.put("petName", petNotificationDTO.getSpecies());
 
             emailService.sendTemplatedEmail(
-                    profile.email(),
+                    profile.getEmail(),
                     "Znaleźliśmy potencjalne dopasowanie!",
                     "match-found",
                     variables
             );
 
-            log.info("Powiadomienie zapisane do bazy i email wysłany dla userId={}", event.userId());
+            log.info("Powiadomienie zapisane do bazy i email wysłany dla userId={}", event.lostOwnerId());
         } catch (Exception e) {
             log.error("Błąd podczas przetwarzania eventu: {}", message, e);
         }
