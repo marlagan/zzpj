@@ -2,12 +2,12 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import NoticeMap, { getSearchRadiusForNotice } from "../components/NoticeMap";
 import PopUp from "../components/PopUp";
-import { getLocationsNear } from "../api/mapApi";
+import { getLocationsNear, searchByArea } from "../api/mapApi";
 import { createNotice, getNoticeById, getNoticesByType } from "../api/noticeApi";
 import { getStoredUser } from "../api/apiClient";
 import type { User } from "../types/auth";
 import type { Notice } from "../types/notice";
-import type { GeoLocation, MapNoticeMarker } from "../types/map";
+import type { GeoLocation, MapNoticeMarker, MapPoint } from "../types/map";
 import { calculateSearchRadiusKm, distanceKm, parseGeoPoint } from "../utils/geo";
 import { buildSightingNotes, isVisibleOnAnimalMap } from "../utils/noticeMap";
 
@@ -68,6 +68,17 @@ const styles: Record<string, React.CSSProperties> = {
     secondaryButton: {
         background: "#fff",
         color: "#222",
+        border: "3px solid #222",
+        cursor: "pointer",
+        fontFamily: '"Pixelify Sans", sans-serif',
+        fontSize: "14px",
+        padding: "7px 14px",
+        whiteSpace: "nowrap",
+        boxSizing: "border-box",
+    },
+    activeButton: {
+        background: "#aa3bff",
+        color: "#fff",
         border: "3px solid #222",
         cursor: "pointer",
         fontFamily: '"Pixelify Sans", sans-serif',
@@ -153,6 +164,33 @@ function toLocalDateTime(value: string): string {
     return value.length === 16 ? `${value}:00` : value;
 }
 
+function buildMarkersFromNotices(
+    notices: Notice[],
+    geoLocations: GeoLocation[],
+): { markers: MapNoticeMarker[]; byId: Record<string, Notice> } {
+    const activeIds = new Set(notices.map((n) => n.id));
+    const activeGeoLocations = geoLocations.filter((g) => activeIds.has(g.noticeId));
+
+    const markers: MapNoticeMarker[] = notices.map((notice) => {
+        const geo = activeGeoLocations.find((g) => g.noticeId === notice.id);
+        const coords = geo ? parseGeoPoint(geo.location) : null;
+        return {
+            noticeId: notice.id,
+            latitude: coords?.lat ?? notice.latitude,
+            longitude: coords?.lng ?? notice.longitude,
+            noticeType: notice.type,
+            species: notice.species,
+        };
+    });
+
+    const byId: Record<string, Notice> = {};
+    notices.forEach((n) => {
+        byId[n.id] = n;
+    });
+
+    return { markers, byId };
+}
+
 export default function MapPage() {
     const [searchParams] = useSearchParams();
     const storedUser = getStoredUser<User>();
@@ -174,6 +212,12 @@ export default function MapPage() {
     const [sightingError, setSightingError] = useState("");
     const [sightingSubmitting, setSightingSubmitting] = useState(false);
     const [showSightingSuccess, setShowSightingSuccess] = useState(false);
+
+    const [isDrawingArea, setIsDrawingArea] = useState(false);
+    const [areaPolygonPoints, setAreaPolygonPoints] = useState<MapPoint[]>([]);
+    const [isAreaFilterActive, setIsAreaFilterActive] = useState(false);
+    const [areaSearchError, setAreaSearchError] = useState("");
+    const [areaSearching, setAreaSearching] = useState(false);
 
     const selectedNotice = selectedNoticeId ? noticesById[selectedNoticeId] : null;
 
@@ -232,29 +276,15 @@ export default function MapPage() {
 
         visibleNotices = visibleNotices.filter(isVisibleOnAnimalMap);
 
-        const activeIds = new Set(visibleNotices.map((n) => n.id));
-        const activeGeoLocations = geoLocations.filter((g) => activeIds.has(g.noticeId));
-
-        const nextMarkers: MapNoticeMarker[] = visibleNotices.map((notice) => {
-            const geo = activeGeoLocations.find((g) => g.noticeId === notice.id);
-            const coords = geo ? parseGeoPoint(geo.location) : null;
-            return {
-                noticeId: notice.id,
-                latitude: coords?.lat ?? notice.latitude,
-                longitude: coords?.lng ?? notice.longitude,
-                noticeType: notice.type,
-                species: notice.species,
-            };
-        });
-
-        const byId: Record<string, Notice> = {};
-        visibleNotices.forEach((n) => {
-            byId[n.id] = n;
-        });
+        const { markers: nextMarkers, byId } = buildMarkersFromNotices(visibleNotices, geoLocations);
 
         setMarkers(nextMarkers);
         setNoticesById(byId);
         setSelectedNoticeId((prev) => (prev && byId[prev] ? prev : null));
+        setIsAreaFilterActive(false);
+        setAreaPolygonPoints([]);
+        setIsDrawingArea(false);
+        setAreaSearchError("");
         setLoading(false);
     }, []);
 
@@ -294,11 +324,104 @@ export default function MapPage() {
         }
     }, [searchParams]);
 
+    const clearAreaSelection = useCallback(() => {
+        setIsAreaFilterActive(false);
+        setIsDrawingArea(false);
+        setAreaPolygonPoints([]);
+        setAreaSearchError("");
+        setSelectedNoticeId(null);
+        loadMapData(center[0], center[1]);
+    }, [center, loadMapData]);
+
+    const startDrawingArea = () => {
+        setIsDrawingArea(true);
+        setIsAreaFilterActive(false);
+        setAreaPolygonPoints([]);
+        setAreaSearchError("");
+        setSelectedNoticeId(null);
+        setPickingSightingLocation(false);
+        setSightingLat(null);
+        setSightingLng(null);
+        setSightingError("");
+    };
+
+    const cancelDrawingArea = () => {
+        setIsDrawingArea(false);
+        setAreaPolygonPoints([]);
+        setAreaSearchError("");
+        if (isAreaFilterActive) return;
+        loadMapData(center[0], center[1]);
+    };
+
+    const handleSearchInArea = async () => {
+        if (areaPolygonPoints.length < 3) {
+            setAreaSearchError("Draw at least 3 points on the map");
+            return;
+        }
+
+        setAreaSearching(true);
+        setAreaSearchError("");
+
+        try {
+            const geoLocations = await searchByArea({
+                polygonPoints: areaPolygonPoints,
+            });
+
+            const noticeIds = [...new Set(geoLocations.map((g) => g.noticeId))];
+            if (noticeIds.length === 0) {
+                setMarkers([]);
+                setNoticesById({});
+                setSelectedNoticeId(null);
+                setIsAreaFilterActive(true);
+                setIsDrawingArea(false);
+                return;
+            }
+
+            const notices = await Promise.all(
+                noticeIds.map((id) => getNoticeById(id).catch(() => null)),
+            );
+            const visibleNotices = notices.filter(
+                (n): n is Notice => n != null && isVisibleOnAnimalMap(n),
+            );
+
+            const { markers: nextMarkers, byId } = buildMarkersFromNotices(
+                visibleNotices,
+                geoLocations,
+            );
+
+            setMarkers(nextMarkers);
+            setNoticesById(byId);
+            setSelectedNoticeId(null);
+            setIsAreaFilterActive(true);
+            setIsDrawingArea(false);
+        } catch (err) {
+            setAreaSearchError(
+                err instanceof Error ? err.message : "Area search failed",
+            );
+        } finally {
+            setAreaSearching(false);
+        }
+    };
+
     const handleMapClick = (lat: number, lng: number) => {
+        if (isDrawingArea) {
+            setAreaPolygonPoints((prev) => [
+                ...prev,
+                { lat: Number(lat.toFixed(6)), lon: Number(lng.toFixed(6)) },
+            ]);
+            setAreaSearchError("");
+            return;
+        }
+
         if (pickingSightingLocation) {
             setSightingLat(Number(lat.toFixed(6)));
             setSightingLng(Number(lng.toFixed(6)));
             setSightingError("");
+            return;
+        }
+
+        if (isAreaFilterActive) {
+            clearAreaSelection();
             return;
         }
 
@@ -391,6 +514,44 @@ export default function MapPage() {
                     </Link>
                     <button
                         type="button"
+                        style={isDrawingArea ? styles.activeButton : styles.secondaryButton}
+                        onClick={() => (isDrawingArea ? cancelDrawingArea() : startDrawingArea())}
+                    >
+                        {isDrawingArea ? "CANCEL DRAW" : "DRAW AREA"}
+                    </button>
+                    {isDrawingArea && (
+                        <>
+                            <button
+                                type="button"
+                                style={styles.secondaryButton}
+                                onClick={() =>
+                                    setAreaPolygonPoints((prev) => prev.slice(0, -1))
+                                }
+                                disabled={areaPolygonPoints.length === 0}
+                            >
+                                UNDO POINT
+                            </button>
+                            <button
+                                type="button"
+                                style={styles.button}
+                                onClick={handleSearchInArea}
+                                disabled={areaSearching || areaPolygonPoints.length < 3}
+                            >
+                                {areaSearching ? "SEARCHING..." : "SEARCH IN AREA"}
+                            </button>
+                        </>
+                    )}
+                    {isAreaFilterActive && !isDrawingArea && (
+                        <button
+                            type="button"
+                            style={styles.secondaryButton}
+                            onClick={clearAreaSelection}
+                        >
+                            CLEAR AREA
+                        </button>
+                    )}
+                    <button
+                        type="button"
                         style={styles.secondaryButton}
                         onClick={() => loadMapData(center[0], center[1])}
                     >
@@ -406,7 +567,9 @@ export default function MapPage() {
                     noticesById={noticesById}
                     selectedNoticeId={selectedNoticeId}
                     searchRadiusMeters={searchRadiusMeters}
-                    onMarkerSelect={setSelectedNoticeId}
+                    onMarkerSelect={(id) => {
+                        if (!isDrawingArea) setSelectedNoticeId(id);
+                    }}
                     onMapClick={handleMapClick}
                     pickingSightingLocation={pickingSightingLocation}
                     sightingMarker={
@@ -416,13 +579,26 @@ export default function MapPage() {
                     }
                     userLocation={userLocation}
                     recenterKey={recenterKey}
+                    drawingArea={isDrawingArea}
+                    areaPolygon={
+                        (isDrawingArea || isAreaFilterActive) && areaPolygonPoints.length > 0
+                            ? areaPolygonPoints
+                            : null
+                    }
+                    autoFitBounds={!isDrawingArea}
                 />
             </div>
 
             <aside style={styles.panel}>
                     <p style={styles.hint}>
-                        Showing animals within {BROWSE_RADIUS_KM.toFixed(0)} km. Click a marker to read the description.
+                        {isDrawingArea
+                            ? `Click the map to add polygon corners (${areaPolygonPoints.length} points). Need at least 3, then SEARCH IN AREA.`
+                            : isAreaFilterActive
+                              ? "Showing animals inside the selected area. Click the map or CLEAR AREA to return to the full map."
+                              : `Showing animals within ${BROWSE_RADIUS_KM.toFixed(0)} km. Click a marker to read the description.`}
                     </p>
+
+                    {areaSearchError && <p style={styles.errorText}>{areaSearchError}</p>}
 
                     {loading && <p style={styles.hint}>Loading map data...</p>}
                     {!loading && loadError && <p style={styles.errorText}>{loadError}</p>}
@@ -430,8 +606,12 @@ export default function MapPage() {
                         <p style={styles.hint}>No active animals in this area yet.</p>
                     )}
 
-                    {!selectedNotice && !loading && (
-                        <p style={styles.hint}>Select a marker, or click the map to clear selection and return to your location.</p>
+                    {!selectedNotice && !loading && !isDrawingArea && (
+                        <p style={styles.hint}>
+                            {isAreaFilterActive
+                                ? "Click the map to clear the area filter."
+                                : "Select a marker, or click the map to clear selection and return to your location."}
+                        </p>
                     )}
 
                     {selectedNotice && (

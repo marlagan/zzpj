@@ -1,5 +1,5 @@
 import { apiFetch } from "./apiClient";
-import type { GeoLocation } from "../types/map";
+import type { AreaSearchRequest, GeoLocation } from "../types/map";
 
 export const getLocationsNear = (lat: number, lon: number, radiusKm: number) =>
     apiFetch<GeoLocation[]>(
@@ -10,3 +10,9 @@ export const getMatchesForNotice = (noticeId: string, species: string, daysMissi
     apiFetch<GeoLocation[]>(
         `/api/maps/locations/matches/${noticeId}?species=${encodeURIComponent(species)}&daysMissing=${daysMissing}`,
     );
+
+export const searchByArea = (request: AreaSearchRequest) =>
+    apiFetch<GeoLocation[]>("/api/maps/locations/search-by-area", {
+        method: "POST",
+        body: JSON.stringify(request),
+    });
