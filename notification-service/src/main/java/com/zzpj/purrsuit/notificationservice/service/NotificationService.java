@@ -28,7 +28,7 @@ public class NotificationService {
     }
 
     public long countUnread(UUID userId) {
-        return notificationRepository.countByUserId(userId);
+        return notificationRepository.countByUserIdAndStatus(userId, NotificationStatus.PENDING);
     }
 
     public Notification save(Notification notification) {
